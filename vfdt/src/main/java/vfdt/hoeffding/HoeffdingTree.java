@@ -7,6 +7,42 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
+
+/*
+TODO lista pytań:
+- kwestia implementacji w Flinku - czy zrobić po prostu obiekt drzewa przy użyciu ValueState<Drzewo>, potem zrównoleglanie z wykorzystaniem Flinka
+
+- kwestia klasyfikatora w liściu drzewa - czy zostawić statystycznie obliczaną klasę większościową,
+czy od razu robić np klasyfikator bayesowski - w następnym etapie
+
+- podział atrybutów na ciągłe i dyskretne - jak ustalać wartość progową podziału (np z wykorzystaniem B-drzewa z przykładu z książki), jak w przypadku atrybutów dyskretnych - nawet w przypadku dyskretnych sprawdzamy nierówności
+- spróbować na początku najłatwiejszą
+
+- zrobić start N próbek, podczas których tylko uczymy klasyfikator
+
+- podział atrybutów - czy robić zawsze podział na dwie gałęzie
+    - czy w takiej sytuacji przy zmiennych dyskretnych robić prosty podział - gałęzie równe/różne atrybutowi o największej heurystyce podczas dzielenia
+
+- czy kształt funkcji heurystyki atrybutów powinien być zależny od node'a w drzewie, czy stały dla całego drzewa -
+    funkcja będzie wtedy liczyć heurystykę tylko na podstawie statystyk node'a w drzewie - na początku stałą, potem można rozbudować
+
+- jaką użyć sensowną funkcję heurystyki do testowania prostego klasyfikatora
+
+- jaki zrobić prosty przykład do testowania - np. atrybuty ((ciągłe)x, y, jakieś parametry dyskretne)
+
+- czy jest jakaś praca opisująca dobór parametru tau - eksperymentalnie - zależne od problemu, charakteru danych - użyc w klasyfikatorze tau
+
+- czy robić coś więcej podczas uczenia w przypadku, gdy klasa aktualnej próbki == klasa większościowa liścia? np prowadzić statystykę poprawnych trafień
+
+- czy na ten moment wystarczy odczytywanie strumienia z pliku, czy podpiąć Flinka pod Kafkę odczytującą z wielu producentów
+
+- co napisać w podsumowaniu pracowni - 10-15 stron - spróbować pisać tekst ściśle pod pracę:
+    - cel pracy
+    - opisać Flinka
+    - algorytm
+    - eksperymenty
+ */
+
 public class HoeffdingTree <K, S extends NodeStatistics<K>, C extends ComparatorInterface<K>, B extends StatisticsBuilderInterface<K, S>> {
     private long n;
     private long nMin;
