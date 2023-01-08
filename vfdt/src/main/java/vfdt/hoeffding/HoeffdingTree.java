@@ -55,12 +55,12 @@ public class HoeffdingTree <S extends NodeStatistics, C extends ComparatorInterf
     private B statisticsBuilder;
     private BiFunction<String, Node<S, C>, Double> heuristic;
 
-    private BiConsumer<Example, Node< S, C>> nodeSplitter; //TODO consider using attribute instead of example
+    private BiConsumer<String, Node< S, C>> nodeSplitter;
 
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<S, C>, Double> heuristic, BiConsumer<Example, Node<S, C>> nodeSplitter) {
+    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<S, C>, Double> heuristic, BiConsumer<String, Node<S, C>> nodeSplitter) {
         this.R = R;
         this.delta = delta;
         this.attributes = attributes;
@@ -89,13 +89,17 @@ public class HoeffdingTree <S extends NodeStatistics, C extends ComparatorInterf
                 Tuple4<String, Double, String, Double> tuple4 = twoAttributesWithLargestHeuristic(leaf);
 
                 double eps = getEpsilon();
-                if (tuple4.f1 != null && tuple4.f3 != null && tuple4.f1 - tuple4.f3 > eps) {
-                    nodeSplitter.accept(example, leaf);
+                String f0 = tuple4.f0;
+                Double f1 = tuple4.f1;
+                Double f3 = tuple4.f3;
+
+                if (f1 != null && f3 != null && f1 - f3 > eps) {
+                    nodeSplitter.accept(f0, leaf);
                     //split
                     //init new leafs
                 }
                 else if (eps < tau) {
-                    nodeSplitter.accept(example, leaf);
+                    nodeSplitter.accept(f0, leaf);
                     //split
                     //init new leafs
                 }
