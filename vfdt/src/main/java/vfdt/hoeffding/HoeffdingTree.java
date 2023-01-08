@@ -43,7 +43,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
     - eksperymenty
  */
 
-public class HoeffdingTree <K, S extends NodeStatistics<K>, C extends ComparatorInterface<K>, B extends StatisticsBuilderInterface<K, S>> {
+public class HoeffdingTree <S extends NodeStatistics, C extends ComparatorInterface, B extends StatisticsBuilderInterface<S>> {
     private long n;
     private long nMin;
     private int R;
@@ -51,16 +51,16 @@ public class HoeffdingTree <K, S extends NodeStatistics<K>, C extends Comparator
     private HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
     private HashSet<String> classLabels;
     private double tau;
-    private Node<K, S, C> root;
+    private Node<S, C> root;
     private B statisticsBuilder;
-    private BiFunction<String, Node<K, S, C>, Double> heuristic;
+    private BiFunction<String, Node<S, C>, Double> heuristic;
 
-    private BiConsumer<Example<K>, Node<K, S, C>> nodeSplitter; //TODO consider using attribute instead of example
+    private BiConsumer<Example, Node< S, C>> nodeSplitter; //TODO consider using attribute instead of example
 
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<K, S, C>, Double> heuristic, BiConsumer<Example<K>, Node<K, S, C>> nodeSplitter) {
+    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<S, C>, Double> heuristic, BiConsumer<Example, Node<S, C>> nodeSplitter) {
         this.R = R;
         this.delta = delta;
         this.attributes = attributes;
@@ -74,8 +74,8 @@ public class HoeffdingTree <K, S extends NodeStatistics<K>, C extends Comparator
         this.root = new Node<>(statisticsBuilder.build(classLabels));
     }
 
-    public void train(Example<K> example) {
-        Node<K, S, C> leaf = getLeaf(example);
+    public void train(Example example) {
+        Node<S, C> leaf = getLeaf(example);
 
         String exampleClass = example.getClassName();
         if (Objects.equals(exampleClass, leaf.getMajorityClass())) {
@@ -103,8 +103,8 @@ public class HoeffdingTree <K, S extends NodeStatistics<K>, C extends Comparator
         }
     }
 
-    private Node<K, S, C> getLeaf(Example<K> example) {
-        Node<K, S, C> result = root;
+    private Node<S, C> getLeaf(Example example) {
+        Node<S, C> result = root;
         while (!(result.isLeaf())) {
             result = result.getChild(example);
         }
@@ -115,7 +115,7 @@ public class HoeffdingTree <K, S extends NodeStatistics<K>, C extends Comparator
         return Math.sqrt(Math.pow(R, 2) * Math.log(2/delta) / (2 * n));
     }
 
-    private Tuple4<String, Double, String, Double> twoAttributesWithLargestHeuristic(Node<K, S, C> node) {
+    private Tuple4<String, Double, String, Double> twoAttributesWithLargestHeuristic(Node<S, C> node) {
         String xa = null;
         String xb = null;
         Double hXa = null;

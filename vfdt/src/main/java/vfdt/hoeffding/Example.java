@@ -2,26 +2,16 @@ package vfdt.hoeffding;
 
 import java.util.HashMap;
 
-public class Example<K> {
-    private K key;
+public class Example {
     private String className;
-    private HashMap<String, String> attributes;
+    private HashMap<String, Double> attributes;
 
     public Example() {
     }
 
-    public Example(K key, String className, HashMap<String, String> attributes) {
-        this.key = key;
+    public Example( String className, HashMap<String, Double> attributes) {
         this.className = className;
         this.attributes = attributes;
-    }
-
-    public K getKey() {
-        return key;
-    }
-
-    public void setKey(K key) {
-        this.key = key;
     }
 
     public String getClassName() {
@@ -32,11 +22,11 @@ public class Example<K> {
         this.className = className;
     }
 
-    public HashMap<String, String> getAttributes() {
+    public HashMap<String, Double> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(HashMap<String, String> attributes) {
+    public void setAttributes(HashMap<String, Double> attributes) {
         this.attributes = attributes;
     }
 }
