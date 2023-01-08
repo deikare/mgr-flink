@@ -2,6 +2,6 @@ package vfdt.hoeffding;
 
 import java.util.HashSet;
 
-public interface StatisticsBuilderInterface<K, S extends NodeStatistics<K>> {
+public interface StatisticsBuilderInterface<S extends NodeStatistics> {
     S build(HashSet<String> classNames);
 }

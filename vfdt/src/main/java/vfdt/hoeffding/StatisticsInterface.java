@@ -1,6 +1,6 @@
 package vfdt.hoeffding;
 
-public interface StatisticsInterface<K> {
-    void update(Example<K> example);
+public interface StatisticsInterface {
+    void update(Example example);
     String getMajorityClass();
 }

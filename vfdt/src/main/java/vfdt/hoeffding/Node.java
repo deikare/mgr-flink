@@ -2,8 +2,8 @@ package vfdt.hoeffding;
 
 import java.util.ArrayList;
 
-public class Node<K, S extends NodeStatistics<K>, C extends ComparatorInterface<K>> {
-    private ArrayList<Node<K, S, C>> children;
+public class Node<S extends NodeStatistics, C extends ComparatorInterface> {
+    private ArrayList<Node<S, C>> children;
 
     private S statistics;
     private C comparator;
@@ -14,15 +14,15 @@ public class Node<K, S extends NodeStatistics<K>, C extends ComparatorInterface<
         this.statistics = statistics;
     }
 
-    public Node<K, S, C> getChild(Example<K> example) {
+    public Node<S, C> getChild(Example example) {
         return leaf? null : children.get(comparator.getChild((example)));
     }
 
-    public ArrayList<Node<K, S, C>> getChildren() {
+    public ArrayList<Node< S, C>> getChildren() {
         return children;
     }
 
-    public void setChildren(ArrayList<Node<K, S, C>> children) {
+    public void setChildren(ArrayList<Node< S, C>> children) {
         this.children = children;
     }
 

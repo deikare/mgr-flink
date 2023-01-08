@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class NodeStatistics<K> implements StatisticsInterface<K>{
+public class NodeStatistics implements StatisticsInterface {
     private long n;
 
     HashMap<String, Long> classCounts;
@@ -16,7 +16,7 @@ public class NodeStatistics<K> implements StatisticsInterface<K>{
             classCounts.put(className, 0L);
     }
 
-    public void update(Example<K> example) {
+    public void update(Example example) {
         n += 1;
         String exampleClass = example.getClassName();
         classCounts.put(exampleClass, classCounts.get(exampleClass) + 1L);
