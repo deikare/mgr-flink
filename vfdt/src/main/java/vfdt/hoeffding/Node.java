@@ -1,45 +1,38 @@
 package vfdt.hoeffding;
 
-import java.util.ArrayList;
+public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
+    Node<N_S, B> leftChild;
+    Node<N_S, B> rightChild;
 
-public class Node<S extends NodeStatistics, C extends ComparatorInterface> {
-    private ArrayList<Node<S, C>> children;
+    double splittingValue;
+    String splittingAttribute;
 
-    private S statistics;
-    private C comparator;
+    private N_S statistics;
     private boolean leaf;
 
-    public Node(S statistics) {
+    public Node(B statisticsBuilder) {
         leaf = true;
-        this.statistics = statistics;
+        this.statistics = statisticsBuilder.build();
+        leftChild = null;
+        rightChild = null;
+        splittingAttribute = null;
     }
 
-    public Node<S, C> getChild(Example example) {
-        return leaf? null : children.get(comparator.getChild((example)));
+    public Node<N_S, B> getChild(Example example) {
+        Node<N_S, B> result = null;
+
+        if (leaf) {
+            Double attributeValue = example.getAttributes().get(splittingAttribute);
+            if (attributeValue != null) {
+                result = (attributeValue <= splittingValue)? leftChild : rightChild;
+            }
+        }
+
+        return result;
     }
 
-    public ArrayList<Node< S, C>> getChildren() {
-        return children;
-    }
-
-    public void setChildren(ArrayList<Node< S, C>> children) {
-        this.children = children;
-    }
-
-    public S getStatistics() {
+    public N_S getStatistics() {
         return statistics;
-    }
-
-    public void setStatistics(S statistics) {
-        this.statistics = statistics;
-    }
-
-    public C getComparator() {
-        return comparator;
-    }
-
-    public void setComparator(C comparator) {
-        this.comparator = comparator;
     }
 
     public boolean isLeaf() {
@@ -50,7 +43,13 @@ public class Node<S extends NodeStatistics, C extends ComparatorInterface> {
         this.leaf = leaf;
     }
 
-    public void splitLeaf() {}
+    public void splitLeaf(String splittingAttribute, B statisticsBuilder) {
+        this.leaf = false;
+        this.splittingAttribute = splittingAttribute;
+        this.splittingValue = statistics.getSplittingValue(splittingAttribute);
+        this.leftChild = new Node<>(statisticsBuilder);
+        this.rightChild = new Node<>(statisticsBuilder);
+    }
 
 
     public String getMajorityClass() {
