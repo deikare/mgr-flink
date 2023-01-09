@@ -27,6 +27,11 @@ public class NodeStatistics implements StatisticsInterface {
         return Collections.max(classCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
+    @Override
+    public double getSplittingValue(String attribute) {
+        return 0;
+    }
+
     public long getN() {
         return n;
     }

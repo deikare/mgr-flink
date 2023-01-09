@@ -4,7 +4,6 @@ import org.apache.flink.api.java.tuple.Tuple4;
 
 import java.util.HashSet;
 import java.util.Objects;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 
 
@@ -17,6 +16,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
 
 - podział atrybutów na ciągłe i dyskretne - jak ustalać wartość progową podziału (np z wykorzystaniem B-drzewa z przykładu z książki), jak w przypadku atrybutów dyskretnych - nawet w przypadku dyskretnych sprawdzamy nierówności
 - spróbować na początku najłatwiejszą
+- dyskretne zmienne zawsze można kodować jako ciągłe
 
 - zrobić start N próbek, podczas których tylko uczymy klasyfikator
 
@@ -43,39 +43,35 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
     - eksperymenty
  */
 
-public class HoeffdingTree <S extends NodeStatistics, C extends ComparatorInterface, B extends StatisticsBuilderInterface<S>> {
+public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S> > {
     private long n;
     private long nMin;
     private int R;
     private double delta;
     private HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
-    private HashSet<String> classLabels;
     private double tau;
-    private Node<S, C> root;
+    private Node<N_S, B> root;
     private B statisticsBuilder;
-    private BiFunction<String, Node<S, C>, Double> heuristic;
+    private BiFunction<String, Node<N_S, B>, Double> heuristic;
 
-    private BiConsumer<String, Node< S, C>> nodeSplitter;
 
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<S, C>, Double> heuristic, BiConsumer<String, Node<S, C>> nodeSplitter) {
+    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic) {
         this.R = R;
         this.delta = delta;
         this.attributes = attributes;
-        this.classLabels = classLabels;
         this.tau = tau;
-        this.nodeSplitter = nodeSplitter;
         this.n = 0;
         this.nMin = nMin;
         this.statisticsBuilder = statisticsBuilder;
         this.heuristic = heuristic;
-        this.root = new Node<>(statisticsBuilder.build(classLabels));
+        this.root = new Node<>(statisticsBuilder);
     }
 
     public void train(Example example) {
-        Node<S, C> leaf = getLeaf(example);
+        Node<N_S, B> leaf = getLeaf(example);
 
         String exampleClass = example.getClassName();
         if (Objects.equals(exampleClass, leaf.getMajorityClass())) {
@@ -94,21 +90,17 @@ public class HoeffdingTree <S extends NodeStatistics, C extends ComparatorInterf
                 Double f3 = tuple4.f3;
 
                 if (f1 != null && f3 != null && f1 - f3 > eps) {
-                    nodeSplitter.accept(f0, leaf);
-                    //split
-                    //init new leafs
+                    leaf.splitLeaf(f0, statisticsBuilder);
                 }
                 else if (eps < tau) {
-                    nodeSplitter.accept(f0, leaf);
-                    //split
-                    //init new leafs
+                    leaf.splitLeaf(f0, statisticsBuilder);
                 }
             }
         }
     }
 
-    private Node<S, C> getLeaf(Example example) {
-        Node<S, C> result = root;
+    private Node<N_S, B> getLeaf(Example example) {
+        Node<N_S, B> result = root;
         while (!(result.isLeaf())) {
             result = result.getChild(example);
         }
@@ -119,7 +111,7 @@ public class HoeffdingTree <S extends NodeStatistics, C extends ComparatorInterf
         return Math.sqrt(Math.pow(R, 2) * Math.log(2/delta) / (2 * n));
     }
 
-    private Tuple4<String, Double, String, Double> twoAttributesWithLargestHeuristic(Node<S, C> node) {
+    private Tuple4<String, Double, String, Double> twoAttributesWithLargestHeuristic(Node<N_S, B> node) {
         String xa = null;
         String xb = null;
         Double hXa = null;

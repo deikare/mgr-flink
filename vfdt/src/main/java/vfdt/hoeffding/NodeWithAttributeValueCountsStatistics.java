@@ -30,13 +30,8 @@ public class NodeWithAttributeValueCountsStatistics extends NodeStatistics{
             else {
                 attributeValuesCounter.put(value, valueCounts + 1);
             }
-
+            //TODO verify, if attributeValueCounts needs to be updated on internal map update
         }
-    }
-
-    public double getMostFrequentAttributeValue(String attribute) throws RuntimeException {
-        HashMap<Double, Long> attributeValuesCounter = getAttributeValuesCounter(attribute);
-        return Collections.max(attributeValuesCounter.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
     private HashMap<Double, Long> getAttributeValuesCounter(String attribute) throws RuntimeException {
@@ -45,5 +40,11 @@ public class NodeWithAttributeValueCountsStatistics extends NodeStatistics{
             throw new RuntimeException("Example contains undefined attribute");
         }
         return attributeValuesCounter;
+    }
+
+    @Override
+    public double getSplittingValue(String attribute) throws RuntimeException {
+        HashMap<Double, Long> attributeValuesCounter = getAttributeValuesCounter(attribute);
+        return Collections.max(attributeValuesCounter.entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 }
