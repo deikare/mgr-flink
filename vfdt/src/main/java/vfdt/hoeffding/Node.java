@@ -51,6 +51,10 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         this.rightChild = new Node<>(statisticsBuilder);
     }
 
+    public void updateStatistics(Example example) {
+        statistics.update(example);
+    }
+
 
     public String getMajorityClass() {
         return statistics.getMajorityClass();

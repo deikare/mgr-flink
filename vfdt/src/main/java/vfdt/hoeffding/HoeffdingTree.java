@@ -78,8 +78,8 @@ public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuil
             //TODO
         }
         else {
-            leaf.getStatistics().update(example);
-            n += 1;
+            leaf.updateStatistics(example);
+            n++;
 
             if (leaf.getStatistics().getN() > nMin) {
                 Tuple4<String, Double, String, Double> tuple4 = twoAttributesWithLargestHeuristic(leaf);

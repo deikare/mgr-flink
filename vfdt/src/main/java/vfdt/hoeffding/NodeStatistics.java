@@ -17,7 +17,7 @@ public class NodeStatistics implements StatisticsInterface {
     }
 
     public void update(Example example) {
-        n += 1;
+        n++;
         String exampleClass = example.getClassName();
         classCounts.put(exampleClass, classCounts.get(exampleClass) + 1L);
     }
