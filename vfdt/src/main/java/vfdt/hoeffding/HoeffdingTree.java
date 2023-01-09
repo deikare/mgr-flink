@@ -43,7 +43,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
     - eksperymenty
  */
 
-public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S> > {
+public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
     private long n;
     private long nMin;
     private int R;
@@ -76,8 +76,7 @@ public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuil
         String exampleClass = example.getClassName();
         if (Objects.equals(exampleClass, leaf.getMajorityClass())) {
             //TODO
-        }
-        else {
+        } else {
             leaf.updateStatistics(example);
             n++;
 
@@ -91,8 +90,7 @@ public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuil
 
                 if (f1 != null && f3 != null && f1 - f3 > eps) {
                     leaf.splitLeaf(f0, statisticsBuilder);
-                }
-                else if (eps < tau) {
+                } else if (eps < tau) {
                     leaf.splitLeaf(f0, statisticsBuilder);
                 }
             }
@@ -108,7 +106,7 @@ public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuil
     }
 
     private double getEpsilon() {
-        return Math.sqrt(Math.pow(R, 2) * Math.log(2/delta) / (2 * n));
+        return Math.sqrt(Math.pow(R, 2) * Math.log(2 / delta) / (2 * n));
     }
 
     private Tuple4<String, Double, String, Double> twoAttributesWithLargestHeuristic(Node<N_S, B> node) {
@@ -118,12 +116,10 @@ public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuil
         Double hXb = null;
         for (String attribute : attributes) {
             Double h = heuristic.apply(attribute, node);
-            if (xa == null || h > hXa)
-            {
+            if (xa == null || h > hXa) {
                 xa = attribute;
                 hXa = h;
-            }
-            else if (xb == null || h > hXb) {
+            } else if (xb == null || h > hXb) {
                 xb = attribute;
                 hXb = h;
             }

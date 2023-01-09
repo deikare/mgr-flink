@@ -24,7 +24,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         if (leaf) {
             Double attributeValue = example.getAttributes().get(splittingAttribute);
             if (attributeValue != null) {
-                result = (attributeValue <= splittingValue)? leftChild : rightChild;
+                result = (attributeValue <= splittingValue) ? leftChild : rightChild;
             }
         }
 
