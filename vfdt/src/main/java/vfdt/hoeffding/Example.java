@@ -9,7 +9,7 @@ public class Example {
     public Example() {
     }
 
-    public Example( String className, HashMap<String, Double> attributes) {
+    public Example(String className, HashMap<String, Double> attributes) {
         this.className = className;
         this.attributes = attributes;
     }
