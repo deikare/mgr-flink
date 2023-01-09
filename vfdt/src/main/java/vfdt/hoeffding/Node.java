@@ -1,11 +1,11 @@
 package vfdt.hoeffding;
 
 public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
-    Node<N_S, B> leftChild;
-    Node<N_S, B> rightChild;
+    private Node<N_S, B> leftChild;
+    private Node<N_S, B> rightChild;
 
-    double splittingValue;
-    String splittingAttribute;
+    private double splittingValue;
+    private String splittingAttribute;
 
     private N_S statistics;
     private boolean leaf;

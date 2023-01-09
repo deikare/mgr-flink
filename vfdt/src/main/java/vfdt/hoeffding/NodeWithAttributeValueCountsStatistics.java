@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class NodeWithAttributeValueCountsStatistics extends NodeStatistics{
-    HashMap<String, HashMap<Double, Long>> attributeValueCounts;
+    private HashMap<String, HashMap<Double, Long>> attributeValueCounts;
     public NodeWithAttributeValueCountsStatistics(HashSet<String> classNames, HashSet<String> attributes) {
         super(classNames);
         attributeValueCounts = new HashMap<>();
