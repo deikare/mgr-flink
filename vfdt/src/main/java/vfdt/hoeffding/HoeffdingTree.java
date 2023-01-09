@@ -42,7 +42,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
     - algorytm
     - eksperymenty
  */
-
+//TODO check if B can be replaced by static method in NodeStatistics class
 public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
     private long n;
     private long nMin;
