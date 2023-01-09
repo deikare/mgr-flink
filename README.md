@@ -23,3 +23,6 @@
   * opisać Flinka
   * opisać algorytm
   * opisać eksperymenty
+
+# Pytania
+* czy jak node już przestał być liściem, to dalej zliczać w tym nodzie częstość występowania atrybutów próbek przechodzących przez dany node

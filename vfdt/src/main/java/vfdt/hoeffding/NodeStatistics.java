@@ -8,7 +8,7 @@ import java.util.Map;
 public class NodeStatistics implements StatisticsInterface {
     private long n;
 
-    HashMap<String, Long> classCounts;
+    private HashMap<String, Long> classCounts;
     public NodeStatistics(HashSet<String> classNames) {
         n = 0;
         classCounts = new HashMap<>();

@@ -58,7 +58,7 @@ public class HoeffdingTree <N_S extends NodeStatistics, B extends StatisticsBuil
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(int R, double delta, HashSet<String> attributes, HashSet<String> classLabels, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic) {
+    public HoeffdingTree(int R, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic) {
         this.R = R;
         this.delta = delta;
         this.attributes = attributes;
