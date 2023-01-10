@@ -89,9 +89,9 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                 Double f3 = tuple4.f3;
 
                 if (f1 != null && f3 != null && f1 - f3 > eps) {
-                    leaf.splitLeaf(f0, statisticsBuilder);
+                    leaf.split(f0, statisticsBuilder);
                 } else if (eps < tau) {
-                    leaf.splitLeaf(f0, statisticsBuilder);
+                    leaf.split(f0, statisticsBuilder);
                 }
             }
         }
