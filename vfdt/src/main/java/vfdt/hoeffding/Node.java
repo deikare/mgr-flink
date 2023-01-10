@@ -43,7 +43,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         this.leaf = leaf;
     }
 
-    public void splitLeaf(String splittingAttribute, B statisticsBuilder) {
+    public void split(String splittingAttribute, B statisticsBuilder) {
         this.leaf = false;
         this.splittingAttribute = splittingAttribute;
         this.splittingValue = statistics.getSplittingValue(splittingAttribute);
