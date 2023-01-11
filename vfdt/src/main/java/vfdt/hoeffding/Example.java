@@ -29,4 +29,12 @@ public class Example {
     public void setAttributes(HashMap<String, Double> attributes) {
         this.attributes = attributes;
     }
+
+    @Override
+    public String toString() {
+        return "Example{" +
+                "className='" + className + '\'' +
+                ", attributes=" + attributes +
+                '}';
+    }
 }
