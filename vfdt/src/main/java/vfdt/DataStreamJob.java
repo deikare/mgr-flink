@@ -18,7 +18,14 @@
 
 package vfdt;
 
+import org.apache.flink.connector.file.src.FileSource;
+import org.apache.flink.connector.file.src.reader.TextLineInputFormat;
+import org.apache.flink.formats.csv.CsvReaderFormat;
+import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonPropertyOrder;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
+import vfdt.hoeffding.Example;
+
+import java.nio.file.Path;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -34,32 +41,38 @@ import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
  */
 public class DataStreamJob {
 
-	public static void main(String[] args) throws Exception {
-		// Sets up the execution environment, which is the main entry point
-		// to building Flink applications.
-		final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
+    public static void main(String[] args) throws Exception {
+        // Sets up the execution environment, which is the main entry point
+        // to building Flink applications.
+        final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
-		/*
-		 * Here, you can start creating your execution plan for Flink.
-		 *
-		 * Start with getting some data from the environment, like
-		 * 	env.fromSequence(1, 10);
-		 *
-		 * then, transform the resulting DataStream<Long> using operations
-		 * like
-		 * 	.filter()
-		 * 	.flatMap()
-		 * 	.window()
-		 * 	.process()
-		 *
-		 * and many more.
-		 * Have a look at the programming guide:
-		 *
-		 * https://nightlies.apache.org/flink/flink-docs-stable/
-		 *
-		 */
+        final String filepath = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
 
-		// Execute program, beginning computation.
-		env.execute("Flink Java API Skeleton");
-	}
+
+        //TODO exporter from csv to example class
+//        CsvReaderFormat<Example> csvReaderFormat = CsvReaderFormat.forSchema()
+
+        /*
+         * Here, you can start creating your execution plan for Flink.
+         *
+         * Start with getting some data from the environment, like
+         * 	env.fromSequence(1, 10);
+         *
+         * then, transform the resulting DataStream<Long> using operations
+         * like
+         * 	.filter()
+         * 	.flatMap()
+         * 	.window()
+         * 	.process()
+         *
+         * and many more.
+         * Have a look at the programming guide:
+         *
+         * https://nightlies.apache.org/flink/flink-docs-stable/
+         *
+         */
+
+        // Execute program, beginning computation.
+        env.execute("Flink Java API Skeleton");
+    }
 }
