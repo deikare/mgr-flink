@@ -1,10 +1,9 @@
 package vfdt.hoeffding;
 
-import org.apache.flink.api.java.tuple.Tuple4;
-
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.function.BiFunction;
+import java.util.logging.Logger;
 
 
 /*
@@ -44,6 +43,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
  */
 //TODO check if B can be replaced by static method in NodeStatistics class
 public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
+    private Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
     private long n;
     private long nMin;
     private int R;
@@ -70,30 +70,36 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         this.root = new Node<>(statisticsBuilder);
     }
 
-    public void train(Example example) {
+    public void train(Example example) throws RuntimeException {
         Node<N_S, B> leaf = getLeaf(example);
+        logger.info("Processing: " + example.toString());
 
         String exampleClass = example.getClassName();
         if (Objects.equals(exampleClass, leaf.getMajorityClass())) {
             //TODO
+            logger.info("Majority class detected");
         } else {
+            logger.info("Different class, training");
             leaf.updateStatistics(example);
             n++;
 
             if (leaf.getStatistics().getN() > nMin) {
-                Tuple4<String, Double, String, Double> tuple4 = twoAttributesWithLargestHeuristic(leaf);
-
                 double eps = getEpsilon();
-                String f0 = tuple4.f0;
-                Double f1 = tuple4.f1;
-                Double f3 = tuple4.f3;
 
-                if (f1 != null && f3 != null && f1 - f3 > eps) {
-                    leaf.split(f0, statisticsBuilder);
+                HighestHeuristicPOJO pojo = new HighestHeuristicPOJO(leaf);
+
+                if (pojo.attribute == null) {
+                    String msg = "Hoeffding test showed no attributes";
+                    logger.info(msg);
+                    throw new RuntimeException(msg);
+                } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
+                    logger.info("Heuristic value is correspondingly higher, splitting");
+                    leaf.split(pojo.attribute, statisticsBuilder);
                 } else if (eps < tau) {
-                    leaf.split(f0, statisticsBuilder);
-                }
-            }
+                    logger.info("Epsilon is lower than tau, splitting");
+                    leaf.split(pojo.attribute, statisticsBuilder);
+                } else logger.info("No split");
+            } else logger.info("Not enough samples to test splits");
         }
     }
 
@@ -109,23 +115,32 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         return Math.sqrt(Math.pow(R, 2) * Math.log(2 / delta) / (2 * n));
     }
 
-    private Tuple4<String, Double, String, Double> twoAttributesWithLargestHeuristic(Node<N_S, B> node) {
-        String xa = null;
-        String xb = null;
-        Double hXa = null;
-        Double hXb = null;
-        for (String attribute : attributes) {
-            Double h = heuristic.apply(attribute, node);
-            if (xa == null || h > hXa) {
-                xa = attribute;
-                hXa = h;
-            } else if (xb == null || h > hXb) {
-                xb = attribute;
-                hXb = h;
-            }
-        }
+    private class HighestHeuristicPOJO {
+        final String attribute;
+        final Double hXa;
+        final Double hXb;
 
-        return new Tuple4<>(xa, hXa, xb, hXb);
+        public HighestHeuristicPOJO(Node<N_S, B> node) {
+            Double hXbTemp = null;
+            Double hXaTemp = null;
+            String xaTemp = null;
+            String xbTemp = null;
+
+            for (String attribute : attributes) {
+                Double h = heuristic.apply(attribute, node);
+                if (xaTemp == null || h > hXaTemp) {
+                    xaTemp = attribute;
+                    hXaTemp = h;
+                } else if (xbTemp == null || h > hXbTemp) {
+                    xbTemp = attribute;
+                    hXbTemp = h;
+                }
+            }
+
+            hXb = hXbTemp;
+            hXa = hXaTemp;
+            attribute = xaTemp;
+        }
     }
 
 
