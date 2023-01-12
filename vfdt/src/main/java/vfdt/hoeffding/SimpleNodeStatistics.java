@@ -26,7 +26,7 @@ public class SimpleNodeStatistics extends NodeStatistics {
             Double value = attributeEntry.getValue();
             Long valueCounts = attributeValuesCounter.get(value);
             if (valueCounts == null) {
-                attributeValuesCounter.put(value, 0L);
+                attributeValuesCounter.put(value, 1L);
             } else {
                 attributeValuesCounter.put(value, valueCounts + 1);
             }

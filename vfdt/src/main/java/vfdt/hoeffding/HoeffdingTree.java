@@ -8,6 +8,7 @@ import java.util.logging.Logger;
 
 /*
 TODO lista pytań:
+- TODO !!! najważniejsze - czy update statystyk nie powinien być zawsze, niezależnie od klasy większościowej?
 - kwestia implementacji w Flinku - czy zrobić po prostu obiekt drzewa przy użyciu ValueState<Drzewo>, potem zrównoleglanie z wykorzystaniem Flinka
 
 - kwestia klasyfikatora w liściu drzewa - czy zostawić statystycznie obliczaną klasę większościową,
