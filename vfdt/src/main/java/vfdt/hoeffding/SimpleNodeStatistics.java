@@ -5,11 +5,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
-public class NodeWithAttributeValueCountsStatistics extends NodeStatistics {
+public class SimpleNodeStatistics extends NodeStatistics {
     private HashMap<String, HashMap<Double, Long>> attributeValueCounts;
 
-    public NodeWithAttributeValueCountsStatistics(HashSet<String> classNames, HashSet<String> attributes) {
-        super(classNames);
+    public SimpleNodeStatistics(HashSet<String> attributes) {
+        super();
         attributeValueCounts = new HashMap<>();
         for (String attribute : attributes) {
             HashMap<Double, Long> attributeValuesCounter = new HashMap<>();
@@ -46,5 +46,12 @@ public class NodeWithAttributeValueCountsStatistics extends NodeStatistics {
     public double getSplittingValue(String attribute) throws RuntimeException {
         HashMap<Double, Long> attributeValuesCounter = getAttributeValuesCounter(attribute);
         return Collections.max(attributeValuesCounter.entrySet(), Map.Entry.comparingByValue()).getKey();
+    }
+
+    @Override
+    public String toString() {
+        return "NodeWithAttributeValueCountsStatistics{" +
+                "attributeValueCounts=" + attributeValueCounts +
+                "} " + super.toString();
     }
 }

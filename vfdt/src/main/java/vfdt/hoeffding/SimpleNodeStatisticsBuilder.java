@@ -2,17 +2,15 @@ package vfdt.hoeffding;
 
 import java.util.HashSet;
 
-public class SimpleNodeStatisticsBuilder implements StatisticsBuilderInterface<NodeWithAttributeValueCountsStatistics> {
-    private HashSet<String> classNames;
+public class SimpleNodeStatisticsBuilder implements StatisticsBuilderInterface<SimpleNodeStatistics> {
     private HashSet<String> attributes;
 
-    public SimpleNodeStatisticsBuilder(HashSet<String> classNames, HashSet<String> attributes) {
-        this.classNames = classNames;
+    public SimpleNodeStatisticsBuilder(HashSet<String> attributes) {
         this.attributes = attributes;
     }
 
     @Override
-    public NodeWithAttributeValueCountsStatistics build() {
-        return new NodeWithAttributeValueCountsStatistics(this.classNames, this.attributes);
+    public SimpleNodeStatistics build() {
+        return new SimpleNodeStatistics(this.attributes);
     }
 }

@@ -9,22 +9,28 @@ public class NodeStatistics implements StatisticsInterface {
     private long n;
 
     private HashMap<String, Long> classCounts;
-    public NodeStatistics(HashSet<String> classNames) {
+
+    public NodeStatistics() {
         n = 0;
         classCounts = new HashMap<>();
-        for (String className : classNames)
-            classCounts.put(className, 0L);
     }
 
     public void update(Example example) {
         n++;
         String exampleClass = example.getClassName();
-        classCounts.put(exampleClass, classCounts.get(exampleClass) + 1L);
+        Long count = classCounts.get(exampleClass);
+        if (count == null)
+            classCounts.put(exampleClass, 1L);
+        else classCounts.put(exampleClass, classCounts.get(exampleClass) + 1L);
+
     }
 
     @Override
     public String getMajorityClass() {
-        return Collections.max(classCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
+        String result = null;
+        if (!classCounts.isEmpty())
+            result = Collections.max(classCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
+        return result;
     }
 
     @Override
@@ -34,5 +40,13 @@ public class NodeStatistics implements StatisticsInterface {
 
     public long getN() {
         return n;
+    }
+
+    @Override
+    public String toString() {
+        return "NodeStatistics{" +
+                "n=" + n +
+                ", classCounts=" + classCounts +
+                '}';
     }
 }

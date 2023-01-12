@@ -100,6 +100,8 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                     leaf.split(pojo.attribute, statisticsBuilder);
                 } else logger.info("No split");
             } else logger.info("Not enough samples to test splits");
+
+            logger.info(leaf.getStatistics().toString());
         }
     }
 
