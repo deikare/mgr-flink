@@ -30,7 +30,7 @@ public class Tester {
             int R = 1;
             double delta = 0.05;
             double tau = 0.1;
-            long nMin = 1000;
+            long nMin = 10;
 
             HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(R, delta, attributes, tau, nMin, statisticsBuilder, (String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) -> {
                 return 0.0;
