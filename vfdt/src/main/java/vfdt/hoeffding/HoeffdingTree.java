@@ -41,7 +41,13 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
     - opisać Flinka
     - algorytm
     - eksperymenty
+
+TODO!!! zrobić statystyki i wrzucić do sprawka
+TODO - naprawić podział na klasyfikację i na trening
  */
+
+//Parametry:
+
 //TODO check if B can be replaced by static method in NodeStatistics class
 public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
     private Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
@@ -71,39 +77,40 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         this.root = new Node<>(statisticsBuilder);
     }
 
+    public String predict(Example example) throws RuntimeException {
+        Node<N_S, B> leaf = getLeaf(example);
+        String predictedClass = leaf.getMajorityClass();
+        logger.info(example.toString() + "predicted with " + predictedClass);
+        return predictedClass;
+    }
+
     public void train(Example example) throws RuntimeException {
         Node<N_S, B> leaf = getLeaf(example);
-        logger.info("Processing: " + example.toString());
+        logger.info("Training: " + example.toString());
 
-        String exampleClass = example.getClassName();
-        if (Objects.equals(exampleClass, leaf.getMajorityClass())) {
-            //TODO
-            logger.info("Majority class detected");
-        } else {
-            logger.info("Different class, training");
-            leaf.updateStatistics(example);
-            n++;
+        leaf.updateStatistics(example);
+        n++;
 
-            if (leaf.getStatistics().getN() > nMin) {
-                double eps = getEpsilon();
+        if (leaf.getN() > nMin) {
+            double eps = getEpsilon();
 
-                HighestHeuristicPOJO pojo = new HighestHeuristicPOJO(leaf);
+            HighestHeuristicPOJO pojo = new HighestHeuristicPOJO(leaf);
 
-                if (pojo.attribute == null) {
-                    String msg = "Hoeffding test showed no attributes";
-                    logger.info(msg);
-                    throw new RuntimeException(msg);
-                } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
-                    logger.info("Heuristic value is correspondingly higher, splitting");
-                    leaf.split(pojo.attribute, statisticsBuilder);
-                } else if (eps < tau) {
-                    logger.info("Epsilon is lower than tau, splitting");
-                    leaf.split(pojo.attribute, statisticsBuilder);
-                } else logger.info("No split");
-            } else logger.info("Not enough samples to test splits");
+            if (pojo.attribute == null) {
+                String msg = "Hoeffding test showed no attributes";
+                logger.info(msg);
+                throw new RuntimeException(msg);
+            } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
+                logger.info("Heuristic value is correspondingly higher, splitting");
+                leaf.split(pojo.attribute, statisticsBuilder);
+            } else if (eps < tau) {
+                logger.info("Epsilon is lower than tau, splitting");
+                leaf.split(pojo.attribute, statisticsBuilder);
+            } else logger.info("No split");
+        } else logger.info("Not enough samples to test splits");
 
-            logger.info(leaf.getStatistics().toString());
-        }
+        logger.info(leaf.getStatistics().toString());
+
     }
 
     private Node<N_S, B> getLeaf(Example example) {
