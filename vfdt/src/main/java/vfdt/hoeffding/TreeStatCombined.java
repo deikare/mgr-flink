@@ -37,7 +37,7 @@ public class TreeStatCombined {
     }
 
     public void updateOnLearning(long toLeafTraverseDuration, long nodesOnTraverseCount, long totalDuration) {
-        classificationStats.update(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration, n);
+        learningStats.update(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration, n);
         n++;
     }
 

@@ -230,6 +230,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
 
                 String className = attributesValuesAsString[n];
                 Example example = new Example(className, attributesMap);
+                tree.predict(example);
                 tree.train(example);
             }
 
