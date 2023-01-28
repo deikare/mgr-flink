@@ -45,4 +45,8 @@ public class TreeStatistics {
                 "\nbatchStats:\n" + batchStats.stream().map(TreeStatCombined::toString).collect(Collectors.joining("\n")) +
                 '}';
     }
+
+    public String totalStatisticsToString() {
+        return "totalStats:\n" + totalStats;
+    }
 }

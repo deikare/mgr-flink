@@ -58,7 +58,8 @@ public class TreeStatCombined {
     @Override
     public String toString() {
         return "\t\tn=" + n +
-                "\n\t\tcorrectClassifications=" + correctClassifications +
+                "\n\t\tcorrectClassifications=" + correctClassifications + " (" + (double) (100) * (double) (correctClassifications) / (double) (n) + ")" +
+                "\n\t\t" +
                 "\n\t\tclassificationStats=" + classificationStats +
                 "\n\t\tlearningStats=" + learningStats;
     }

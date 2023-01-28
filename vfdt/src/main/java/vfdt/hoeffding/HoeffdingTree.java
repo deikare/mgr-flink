@@ -1,9 +1,11 @@
 package vfdt.hoeffding;
 
+import com.google.gson.Gson;
 import org.apache.flink.api.java.tuple.Tuple3;
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
@@ -72,6 +74,8 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     private Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
     private long n; //TODO - figure out
     private long nMin;
+
+    private long batchStatLength;
     private int R;
     private double delta;
     private HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
@@ -96,6 +100,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         this.statisticsBuilder = statisticsBuilder;
         this.heuristic = heuristic;
         this.root = new Node<>(statisticsBuilder);
+        this.batchStatLength = batchStatLength;
         treeStatistics = new TreeStatistics(batchStatLength);
     }
 
@@ -188,10 +193,20 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         }
     }
 
-    public String getStatistics() {
-        return treeStatistics.toString();
+    public String printStatistics() {
+        return treeStatistics.totalStatisticsToString();
     }
 
+    public void printStatisticsToFile(String dataPath) throws FileNotFoundException, UnsupportedEncodingException {
+//stat_data_r._d._t._n._b
+        Path path = Paths.get(dataPath);
+        String dataFileName = path.getFileName().toString();
+        String dataFileNameNoExtension = dataFileName.substring(0, dataFileName.lastIndexOf('.'));
+        String statFileName = System.getenv("MGR_FLINK_RESULTS_PATH") + "/stat_" + dataFileNameNoExtension + "_r" + R + "_d" + delta + "_t" + tau + "_n" + nMin + "_b" + batchStatLength + ".txt";
+        PrintWriter writer = new PrintWriter(statFileName, "UTF-8");
+        writer.write(new Gson().toJson(treeStatistics));
+        writer.close();
+    }
 
     public static void main(String[] args) {
         String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
@@ -234,12 +249,13 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                 tree.train(example);
             }
 
-            System.out.println(tree.getStatistics());
-
-
+            System.out.println(tree.printStatistics());
+            tree.printStatisticsToFile(path);
         } catch (FileNotFoundException e) {
             System.out.println("No file found");
             e.printStackTrace();
+        } catch (UnsupportedEncodingException e) {
+            throw new RuntimeException(e);
         }
     }
 }
