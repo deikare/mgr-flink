@@ -60,7 +60,7 @@ def plot_walking_accuracy(data):
         y_total += value["correctClassifications"]
 
     plt.plot(x, percentage)
-    plt.title("Walking classification accuracy")
+    plt.title("Classification: walking accuracy")
     plt.ylabel("accuracy [%]")
     plt.xlabel("sample")
     plt.ylim((0, 100))
@@ -72,15 +72,15 @@ def plot_avg_values(data, key_measurement_type: str, key: str):
     y = [0]
 
     if key == _NODES_TRAVERSE_COUNT:
-        subtitle = "Mean nodes count during tree traverse to leaf"
+        subtitle = "Mean visited nodes count during traversal to leaf"
         y_label = "count"
         prescaler = 1
     elif key == _LEAF_TRAVERSE_DURATION:
-        subtitle = "Mean traverse to leaf duration"
+        subtitle = "Mean traversal to leaf duration"
         y_label = "duration [\u03BCs]"
         prescaler = 1000
     else:
-        subtitle = "Mean node process duration"
+        subtitle = "Mean sample processing duration"
         y_label = "duration [\u03BCs]"
         prescaler = 1000
 
