@@ -1,7 +1,12 @@
 package vfdt.hoeffding;
 
-import java.util.HashSet;
-import java.util.Objects;
+import org.apache.flink.api.java.tuple.Tuple3;
+
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.*;
 import java.util.function.BiFunction;
 import java.util.logging.Logger;
 
@@ -49,9 +54,23 @@ TODO - naprawić podział na klasyfikację i na trening
 //Parametry:
 
 //TODO check if B can be replaced by static method in NodeStatistics class
+
+//TODO miary wydajności:
+ /*
+ histogramy:
+- średnia szybkość przeglądania drzewa
+- liczba node'ów w drzewie
+- ile średnio node'ów musi pokonać próbka podczas przejścia
+- średni czas przetworzenia próbki podczas uczenia
+- średni czas przetworzenia próbki podczas klasyfikacji
+- szybkość obliczenia klasy większościowej
+- liczba próbek poprawnie sklasyfikowanych
+- liczba próbek błędnie sklasyfikowanych
+ */
+
 public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
     private Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
-    private long n;
+    private long n; //TODO - figure out
     private long nMin;
     private int R;
     private double delta;
@@ -61,11 +80,13 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     private B statisticsBuilder;
     private BiFunction<String, Node<N_S, B>, Double> heuristic;
 
+    private TreeStatistics treeStatistics;
+
 
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(int R, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic) {
+    public HoeffdingTree(int R, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic, long batchStatLength) {
         this.R = R;
         this.delta = delta;
         this.attributes = attributes;
@@ -75,17 +96,24 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         this.statisticsBuilder = statisticsBuilder;
         this.heuristic = heuristic;
         this.root = new Node<>(statisticsBuilder);
+        treeStatistics = new TreeStatistics(batchStatLength);
     }
 
     public String predict(Example example) throws RuntimeException {
-        Node<N_S, B> leaf = getLeaf(example);
+        Instant start = Instant.now();
+        Tuple3<Node<N_S, B>, Long, Long> leafWithTimes = getLeaf(example);
+        Node<N_S, B> leaf = leafWithTimes.f0;
         String predictedClass = leaf.getMajorityClass();
-        logger.info(example.toString() + "predicted with " + predictedClass);
+        long duration = Duration.between(start, Instant.now()).toNanos();
+        treeStatistics.updateOnClassification(leafWithTimes.f1, leafWithTimes.f2, duration, Objects.equals(predictedClass, example.getClassName()));
+        logger.info(example + " predicted with " + predictedClass);
         return predictedClass;
     }
 
     public void train(Example example) throws RuntimeException {
-        Node<N_S, B> leaf = getLeaf(example);
+        Instant start = Instant.now();
+        Tuple3<Node<N_S, B>, Long, Long> leafWithTimes = getLeaf(example);
+        Node<N_S, B> leaf = leafWithTimes.f0;
         logger.info("Training: " + example.toString());
 
         leaf.updateStatistics(example);
@@ -102,23 +130,30 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                 throw new RuntimeException(msg);
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
+                treeStatistics.updateOnNodeSplit();
                 leaf.split(pojo.attribute, statisticsBuilder);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
                 leaf.split(pojo.attribute, statisticsBuilder);
+                treeStatistics.updateOnNodeSplit();
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
 
-        logger.info(leaf.getStatistics().toString());
+        long duration = Duration.between(start, Instant.now()).toNanos();
+        treeStatistics.updateOnLearning(leafWithTimes.f1, leafWithTimes.f2, duration);
 
+        logger.info(leaf.getStatistics().toString());
     }
 
-    private Node<N_S, B> getLeaf(Example example) {
+    private Tuple3<Node<N_S, B>, Long, Long> getLeaf(Example example) {
+        Instant start = Instant.now();
+        long count = 1;
         Node<N_S, B> result = root;
         while (!(result.isLeaf())) {
+            count++;
             result = result.getChild(example);
         }
-        return result;
+        return new Tuple3<>(result, Duration.between(start, Instant.now()).toNanos(), count);
     }
 
     private double getEpsilon() {
@@ -153,5 +188,57 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         }
     }
 
+    public String getStatistics() {
+        return treeStatistics.toString();
+    }
 
+
+    public static void main(String[] args) {
+        String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
+        HashSet<String> attributes = new HashSet<>();
+
+        try {
+            File file = new File(path);
+            Scanner scanner = new Scanner(file);
+
+            String line = scanner.nextLine();
+
+            String[] attributesAsString = line.split(",");
+            System.out.println(attributesAsString[attributesAsString.length - 1]);
+            int n = attributesAsString.length - 1;
+            attributes.addAll(Arrays.asList(attributesAsString).subList(0, n));
+
+            SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
+            int R = 1;
+            double delta = 0.05;
+            double tau = 0.1;
+            long nMin = 2;
+            long batchStatLength = 1000;
+
+            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(R, delta, attributes, tau, nMin, statisticsBuilder, (String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) -> {
+                return 0.0;
+            }, batchStatLength);
+
+            while (scanner.hasNext()) {
+                line = scanner.nextLine();
+
+                String[] attributesValuesAsString = line.split(",");
+                HashMap<String, Double> attributesMap = new HashMap<>(n);
+                for (int i = 0; i < n; i++) {
+                    attributesMap.put(attributesAsString[i], Double.parseDouble(attributesValuesAsString[i]));
+                }
+
+                String className = attributesValuesAsString[n];
+                Example example = new Example(className, attributesMap);
+                tree.train(example);
+            }
+
+            System.out.println(tree.getStatistics());
+
+
+        } catch (FileNotFoundException e) {
+            System.out.println("No file found");
+            e.printStackTrace();
+        }
+    }
 }
