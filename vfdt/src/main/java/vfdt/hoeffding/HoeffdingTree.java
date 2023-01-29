@@ -202,10 +202,13 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         Path path = Paths.get(dataPath);
         String dataFileName = path.getFileName().toString();
         String dataFileNameNoExtension = dataFileName.substring(0, dataFileName.lastIndexOf('.'));
-        String statFileName = System.getenv("MGR_FLINK_RESULTS_PATH") + "/stat_" + dataFileNameNoExtension + "_r" + R + "_d" + delta + "_t" + tau + "_n" + nMin + "_b" + batchStatLength + ".txt";
-        PrintWriter writer = new PrintWriter(statFileName, "UTF-8");
+        String statFileName = "stat_" + dataFileNameNoExtension + "_r" + R + "_d" + delta + "_t" + tau + "_n" + nMin + "_b" + batchStatLength + ".txt";
+        String statFilePath = System.getenv("MGR_FLINK_RESULTS_PATH") + "/" + statFileName;
+        PrintWriter writer = new PrintWriter(statFilePath, "UTF-8");
         writer.write(new Gson().toJson(treeStatistics));
         writer.close();
+
+        System.out.println("Printing STAT to file: " + statFileName);
     }
 
     public static void main(String[] args) {
@@ -226,13 +229,18 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
             int R = 1;
             double delta = 0.05;
-            double tau = 0.1;
-            long nMin = 2;
-            long batchStatLength = 1000;
+            double tau = 0.2;
+            long nMin = 50;
+            long batchStatLength = 500;
 
-            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(R, delta, attributes, tau, nMin, statisticsBuilder, (String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) -> {
-                return 0.0;
-            }, batchStatLength);
+            BiFunction<String, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>, Double> heuristic = (s, node) -> {
+                double threshold = 0.5;
+                return Math.abs(threshold - node.getStatistics().getSplittingValue(s)) / threshold;
+            };
+
+//            heuristic = (s, node) -> 0.0;
+
+            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(R, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
 
             while (scanner.hasNext()) {
                 line = scanner.nextLine();
