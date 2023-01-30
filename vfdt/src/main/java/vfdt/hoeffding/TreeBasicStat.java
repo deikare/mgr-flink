@@ -2,7 +2,7 @@ package vfdt.hoeffding;
 
 import java.text.DecimalFormat;
 
-public class TreeStatCombined {
+public class TreeBasicStat {
     private long n = 0;
     private long correctClassifications = 0;
 
@@ -33,7 +33,7 @@ public class TreeStatCombined {
     private TreeStat classificationStats;
     private TreeStat learningStats;
 
-    public TreeStatCombined() {
+    public TreeBasicStat() {
         classificationStats = new TreeStat();
         learningStats = new TreeStat();
     }
@@ -61,9 +61,9 @@ public class TreeStatCombined {
     public String toString() {
         DecimalFormat format = new DecimalFormat("0.00");
         return "\t\tn=" + n +
-                "\n\t\tcorrectClassifications=" + correctClassifications + " (accuracy: " + format.format((double) (100) * (double) (correctClassifications) / (double) (n)) + "%)" +
+                "\n\t\tcorrectClassifications = " + correctClassifications + " (accuracy: " + format.format((double) (100) * (double) (correctClassifications) / (double) (n)) + "%)" +
                 "\n\t\t" +
-                "\n\t\tclassificationStats=" + classificationStats +
-                "\n\t\tlearningStats=" + learningStats;
+                "\n\t\tclassificationStats = " + classificationStats +
+                "\n\t\tlearningStats = " + learningStats;
     }
 }

@@ -42,6 +42,10 @@ public class NodeStatistics implements StatisticsInterface {
         return n;
     }
 
+    public void resetN() {
+        n = 0L;
+    }
+
     @Override
     public String toString() {
         return "NodeStatistics{" +

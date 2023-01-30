@@ -63,4 +63,8 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     public long getN() {
         return statistics.getN();
     }
+
+    public void resetN() {
+        statistics.resetN();
+    }
 }

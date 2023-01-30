@@ -1,30 +1,30 @@
 package vfdt.hoeffding;
 
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 public class TreeStatistics {
-    private TreeStatCombined totalStats;
+    private TotalTreeStat totalStats;
     private long batchLength;
     private LinkedList<Long> samplesOnSplit;
 
-    private LinkedList<TreeStatCombined> batchStats;
+    private LinkedList<TreeBasicStat> batchStats;
 
     public TreeStatistics(long batchLength) {
         this.batchLength = batchLength;
 
-        totalStats = new TreeStatCombined();
+        totalStats = new TotalTreeStat();
         batchStats = new LinkedList<>();
         samplesOnSplit = new LinkedList<>();
-        batchStats.addLast(new TreeStatCombined());
+        batchStats.addLast(new TreeBasicStat());
+
     }
 
     public void updateOnLearning(long toLeafTraverseDuration, long nodesOnTraverseCount, long totalDuration) {
         totalStats.updateOnLearning(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration);
         batchStats.getLast().updateOnLearning(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration);
         if (totalStats.getN() % batchLength == 0)
-            batchStats.addLast(new TreeStatCombined());
+            batchStats.addLast(new TreeBasicStat());
     }
 
     public void updateOnClassification(long toLeafTraverseDuration, long nodesOnTraverseCount, long totalDuration, boolean isCorrect) {
@@ -32,8 +32,11 @@ public class TreeStatistics {
         batchStats.getLast().updateOnClassification(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration, isCorrect);
     }
 
-    public void updateOnNodeSplit() {
+    public void updateOnNodeSplit(boolean isReasonTau) {
         samplesOnSplit.addLast(totalStats.getN());
+        if (isReasonTau)
+            totalStats.incTauSplitsCount();
+        else totalStats.incHeuristicSplitsCount();
     }
 
     @Override
@@ -42,7 +45,7 @@ public class TreeStatistics {
                 "\ntotalStats:\n" + totalStats +
                 "\nbatchLength:\n" + batchLength +
                 "\nsamplesOnSplit: " + samplesOnSplit +
-                "\nbatchStats:\n" + batchStats.stream().map(TreeStatCombined::toString).collect(Collectors.joining("\n")) +
+                "\nbatchStats:\n" + batchStats.stream().map(TreeBasicStat::toString).collect(Collectors.joining("\n")) +
                 '}';
     }
 
