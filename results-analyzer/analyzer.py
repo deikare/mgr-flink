@@ -11,94 +11,118 @@ def parse_args() -> str:
     return filename
 
 
-def read_data(filename: str):
-    with open(filename) as f:
-        data = json.load(f)
+def read_data(filenames: list) -> list[dict]:
+    result = []
+    for filename in filenames:
+        with open(filename) as f:
+            data = json.load(f)
+            result.append(data)
 
-    return data
+    return result
 
 
-def plot_split_samples(data):
-    x = [1]
-    y = [1]
-    for sampleNumber in data["samplesOnSplit"]:
-        x.append(sampleNumber)
-        y.append(y[-1] + 2)
+def plot_split_samples(data: list[dict], labels: list[str] = None):
+    for data_dict in data:
+        x = [1]
+        y = [1]
+        for sampleNumber in data_dict["samplesOnSplit"]:
+            x.append(sampleNumber)
+            y.append(y[-1] + 2)
 
-    plt.step(x, y)
+        plt.step(x, y)
+
+    if labels:
+        plt.legend(labels)
     plt.title("Number of nodes in tree during stream processing")
     plt.ylabel("number of nodes")
     plt.xlabel("sample")
-    plt.show()
+    plt.savefig('plots/splitsamples.png')
+    plt.close(plt.gcf())
 
 
-def plot_accuracy_per_batch(data):
-    x = [0]
-    y = [0.0]
+def plot_accuracy_per_batch(data: list[dict], labels: list[str] = None):
+    for data_dict in data:
+        x = [0]
+        y = [0.0]
 
-    for value in data["batchStats"]:
-        x.append(value["n"] + x[-1])
-        y.append(value["correctClassifications"] * 100 / value["n"])
+        for value in data_dict["batchStats"]:
+            x.append(value["n"] + x[-1])
+            y.append(value["correctClassifications"]
+                     * 100 / value["n"])
 
-    plt.plot(x, y)
-    plt.title("Classification accuracy")
+        plt.plot(x, y)
+
+    if labels:
+        plt.legend(labels)
+    plt.title("Classification accuracy per batch")
     plt.ylabel("accuracy [%]")
     plt.xlabel("sample")
     plt.ylim((0, 100))
-    plt.show()
+    plt.savefig('plots/batch_accuracy.png')
+    plt.close(plt.gcf())
 
 
-def plot_walking_accuracy(data):
-    x = [0]
-    y_total = 0
-    percentage = [0.0]
+def plot_walking_accuracy(data: list[dict], labels: list[str] = None):
+    for data_dict in data:
+        x = [0]
+        y_total = 0
+        percentage = [0.0]
 
-    for value in data["batchStats"]:
-        x.append(value["n"] + x[-1])
-        percentage.append(
-            (value["correctClassifications"] + y_total) * 100 / x[-1])
-        y_total += value["correctClassifications"]
+        for value in data_dict["batchStats"]:
+            x.append(value["n"] + x[-1])
+            percentage.append(
+                (value["correctClassifications"] + y_total) * 100 / x[-1])
+            y_total += value["correctClassifications"]
 
-    plt.plot(x, percentage)
+        plt.plot(x, percentage)
+
+    if labels:
+        plt.legend(labels)
+
     plt.title("Classification: walking accuracy")
     plt.ylabel("accuracy [%]")
     plt.xlabel("sample")
     plt.ylim((0, 100))
-    plt.show()
+    plt.savefig('plots/accuracy.png')
+    plt.close(plt.gcf())
 
 
-def plot_avg_values(data, key_measurement_type: str, key: str):
-    x = [0]
-    y = [0]
+def plot_avg_values(data: list[dict], key_measurement_type: str, key: str, labels: list[str] = None):
+    for data_dict in data:
+        x = [0]
+        y = [0]
 
-    if key == _NODES_TRAVERSE_COUNT:
-        subtitle = "Mean visited nodes count during traversal to leaf"
-        y_label = "count"
-        prescaler = 1
-    elif key == _LEAF_TRAVERSE_DURATION:
-        subtitle = "Mean traversal to leaf duration"
-        y_label = "duration [\u03BCs]"
-        prescaler = 1000
-    else:
-        subtitle = "Mean sample processing duration"
-        y_label = "duration [\u03BCs]"
-        prescaler = 1000
+        if key == _NODES_TRAVERSE_COUNT:
+            subtitle = "Mean visited nodes count during traversal to leaf per batch"
+            y_label = "count"
+            prescaler = 1
+        elif key == _LEAF_TRAVERSE_DURATION:
+            subtitle = "Mean traversal to leaf duration per batch"
+            y_label = "duration [\u03BCs]"
+            prescaler = 1000
+        else:
+            subtitle = "Mean sample processing duration per batch"
+            y_label = "duration [\u03BCs]"
+            prescaler = 1000
 
-    if key_measurement_type == _CLASSIFICATION:
-        title = f"Classification: {subtitle}"
-    else:
-        title = f"Learning: {subtitle}"
+        if key_measurement_type == _CLASSIFICATION:
+            title = f"Classification: {subtitle}"
+        else:
+            title = f"Learning: {subtitle}"
 
-    for value in data["batchStats"]:
-        x.append(value["n"] + x[-1])
-        y.append(value[key_measurement_type][key] / prescaler)
+        for value in data_dict["batchStats"]:
+            x.append(value["n"] + x[-1])
+            y.append(value[key_measurement_type][key] / prescaler)
 
-    plt.plot(x, y)
+        plt.plot(x, y)
 
+    if labels:
+        plt.legend(labels)
     plt.title(title)
     plt.xlabel("sample")
     plt.ylabel(y_label)
-    plt.show()
+    plt.savefig(f'plots/avg_{key_measurement_type}_{key}.png')
+    plt.close(plt.gcf())
 
 
 _CLASSIFICATION = "classificationStats"
@@ -110,13 +134,26 @@ _TOTAL_DURATION = "meanTotalDuration"
 
 if __name__ == "__main__":
     # filename = parse_args()
-    filename = "results/stat_elec_r1_d0.05_t0.1_n2_b1000.txt"
-    data = read_data(filename)
-    # print(data)
-    plot_walking_accuracy(data)
-    plot_accuracy_per_batch(data)
-    plot_split_samples(data)
+    # filename = "results/stat_elec_r1_d0.05_t0.2_n50_b500.txt"
+    filenames = [
+        "results/stat_elec_r1_d0.05_t0.2_n50_b500.txt",
+        "results/stat_elec_r1_d0.05_t0.2_n500_b500.txt",
+        "results/stat_elec_r1_d0.05_t0.2_n50_b500_no_h.txt"
+    ]
+
+    labels = [
+        "nMin = 50",
+        "nMin = 500",
+        "nMin = 50, no h"
+    ]
+
+    data = read_data(filenames)
+
+    plot_walking_accuracy(data, labels)
+    plot_accuracy_per_batch(data, labels)
+    plot_split_samples(data, labels)
+
     for key_measurement_type in [_CLASSIFICATION, _LEARNING]:
         for key in [_NODES_TRAVERSE_COUNT, _LEAF_TRAVERSE_DURATION, _TOTAL_DURATION]:
             plot_avg_values(data, key_measurement_type,
-                            key)
+                            key, labels)
