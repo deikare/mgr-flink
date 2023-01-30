@@ -90,8 +90,8 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(int R, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic, long batchStatLength) {
-        this.R = R;
+    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic, long batchStatLength) {
+        this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
         this.attributes = attributes;
         this.tau = tau;
@@ -125,6 +125,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         n++;
 
         if (leaf.getN() > nMin) {
+            leaf.resetN();
             double eps = getEpsilon();
 
             HighestHeuristicPOJO pojo = new HighestHeuristicPOJO(leaf);
@@ -135,12 +136,12 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                 throw new RuntimeException(msg);
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
-                treeStatistics.updateOnNodeSplit();
+                treeStatistics.updateOnNodeSplit(false);
                 leaf.split(pojo.attribute, statisticsBuilder);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
                 leaf.split(pojo.attribute, statisticsBuilder);
-                treeStatistics.updateOnNodeSplit();
+                treeStatistics.updateOnNodeSplit(true);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
 
@@ -227,11 +228,11 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             attributes.addAll(Arrays.asList(attributesAsString).subList(0, n));
 
             SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-            int R = 1;
             double delta = 0.05;
             double tau = 0.2;
             long nMin = 50;
             long batchStatLength = 500;
+            long classesAmount = 2;
 
             BiFunction<String, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>, Double> heuristic = (s, node) -> {
                 double threshold = 0.5;
@@ -240,7 +241,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
 
 //            heuristic = (s, node) -> 0.0;
 
-            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(R, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
+            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
 
             while (scanner.hasNext()) {
                 line = scanner.nextLine();
