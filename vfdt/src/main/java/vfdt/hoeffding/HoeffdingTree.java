@@ -84,7 +84,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     private B statisticsBuilder;
     private BiFunction<String, Node<N_S, B>, Double> heuristic;
 
-    private TreeStatistics treeStatistics;
+    private AllTreeStatistics treeStatistics;
 
 
     public HoeffdingTree() {
@@ -101,7 +101,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         this.heuristic = heuristic;
         this.root = new Node<>(statisticsBuilder);
         this.batchStatLength = batchStatLength;
-        treeStatistics = new TreeStatistics(batchStatLength);
+        treeStatistics = new AllTreeStatistics(batchStatLength);
     }
 
     public String predict(Example example) throws RuntimeException {
