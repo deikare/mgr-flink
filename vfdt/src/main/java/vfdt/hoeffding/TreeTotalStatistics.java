@@ -1,10 +1,10 @@
 package vfdt.hoeffding;
 
-public class TotalTreeStat extends TreeBasicStat {
+public class TreeTotalStatistics extends BasicTreeStatistics {
     private long heuristicSplitsCount;
     private long tauSplitsCount;
 
-    public TotalTreeStat() {
+    public TreeTotalStatistics() {
         super();
         heuristicSplitsCount = 0;
         tauSplitsCount = 0;

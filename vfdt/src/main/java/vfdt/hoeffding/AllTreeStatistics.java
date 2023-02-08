@@ -3,20 +3,20 @@ package vfdt.hoeffding;
 import java.util.LinkedList;
 import java.util.stream.Collectors;
 
-public class TreeStatistics {
-    private TotalTreeStat totalStats;
+public class AllTreeStatistics {
+    private TreeTotalStatistics totalStats;
     private long batchLength;
     private LinkedList<Long> samplesOnSplit;
 
-    private LinkedList<TreeBasicStat> batchStats;
+    private LinkedList<BasicTreeStatistics> batchStats;
 
-    public TreeStatistics(long batchLength) {
+    public AllTreeStatistics(long batchLength) {
         this.batchLength = batchLength;
 
-        totalStats = new TotalTreeStat();
+        totalStats = new TreeTotalStatistics();
         batchStats = new LinkedList<>();
         samplesOnSplit = new LinkedList<>();
-        batchStats.addLast(new TreeBasicStat());
+        batchStats.addLast(new BasicTreeStatistics());
 
     }
 
@@ -24,7 +24,7 @@ public class TreeStatistics {
         totalStats.updateOnLearning(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration);
         batchStats.getLast().updateOnLearning(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration);
         if (totalStats.getN() % batchLength == 0)
-            batchStats.addLast(new TreeBasicStat());
+            batchStats.addLast(new BasicTreeStatistics());
     }
 
     public void updateOnClassification(long toLeafTraverseDuration, long nodesOnTraverseCount, long totalDuration, boolean isCorrect) {
@@ -45,7 +45,7 @@ public class TreeStatistics {
                 "\ntotalStats:\n" + totalStats +
                 "\nbatchLength:\n" + batchLength +
                 "\nsamplesOnSplit: " + samplesOnSplit +
-                "\nbatchStats:\n" + batchStats.stream().map(TreeBasicStat::toString).collect(Collectors.joining("\n")) +
+                "\nbatchStats:\n" + batchStats.stream().map(BasicTreeStatistics::toString).collect(Collectors.joining("\n")) +
                 '}';
     }
 
