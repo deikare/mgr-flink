@@ -37,4 +37,8 @@ public class Example {
                 ", attributes=" + attributes +
                 '}';
     }
+
+    public long getId() {
+        return 0L;
+    }
 }

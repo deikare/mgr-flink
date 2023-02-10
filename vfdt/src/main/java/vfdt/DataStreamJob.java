@@ -20,6 +20,7 @@ package vfdt;
 
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.file.src.FileSource;
 import org.apache.flink.connector.file.src.reader.TextLineInputFormat;
 import org.apache.flink.core.fs.Path;
@@ -33,6 +34,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -47,8 +49,8 @@ import java.util.function.BiFunction;
  * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
  */
 public class DataStreamJob {
-    public static Tuple2<LinkedList<Example>, HashSet<String>> readExamples(String filepath) throws FileNotFoundException {
-        HashSet<String> attributes = new HashSet<>();
+    public static Tuple2<LinkedList<Example>, String> readExamples(String filepath) throws FileNotFoundException {
+        LinkedList<String> attributes = new LinkedList<>();
         LinkedList<Example> examples = new LinkedList<>();
 
         try {
@@ -78,7 +80,20 @@ public class DataStreamJob {
         } catch (FileNotFoundException | NumberFormatException e) {
             throw new RuntimeException(e);
         }
-        return new Tuple2<>(examples, attributes);
+        return new Tuple2<>(examples, String.join(",", attributes));
+    }
+
+    public static ParameterTool getVFDTOptions(long classesNumber, double delta, String attributes, double tau, long nMin, long batchStatLength) {
+        HashMap<String, String> options = new HashMap<>();
+
+        options.put("classesNumber", String.valueOf(classesNumber));
+        options.put("delta", String.valueOf(delta));
+        options.put("attributes", attributes);
+        options.put("tau", String.valueOf(tau));
+        options.put("nMin", String.valueOf(nMin));
+        options.put("batchStatLength", String.valueOf(batchStatLength));
+
+        return ParameterTool.fromMap(options);
     }
 
     public static void main(String[] args) throws Exception {
@@ -89,14 +104,18 @@ public class DataStreamJob {
 
         final String filepath = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
 
-        Tuple2<LinkedList<Example>, HashSet<String>> data = readExamples(filepath);
+        Tuple2<LinkedList<Example>, String> data = readExamples(filepath);
 
-        env.fromCollection(data.f0).process(new VFDT());
+        double delta = 0.05;
+        double tau = 0.2;
+        long nMin = 50;
+        long batchStatLength = 500;
+        long classesAmount = 2;
+        ParameterTool params = getVFDTOptions(classesAmount, delta, data.f1, tau, nMin, batchStatLength);
+        env.getConfig().setGlobalJobParameters(params);
 
-//        env.fromSource()
+        env.fromCollection(data.f0).keyBy(Example::getId).process(new VFDT());
 
-        //TODO exporter from csv to example class
-//        CsvReaderFormat<Example> csvReaderFormat = CsvReaderFormat.forSchema()
 
         /*
          * Here, you can start creating your execution plan for Flink.
