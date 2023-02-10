@@ -82,7 +82,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     private double tau;
     private Node<N_S, B> root;
     private B statisticsBuilder;
-    private BiFunction<String, Node<N_S, B>, Double> heuristic;
+    private SerializableHeuristic<N_S, B> heuristic;
 
     private AllTreeStatistics treeStatistics;
 
@@ -90,7 +90,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     public HoeffdingTree() {
     }
 
-    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, BiFunction<String, Node<N_S, B>, Double> heuristic, long batchStatLength) {
+    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, SerializableHeuristic<N_S, B> heuristic, long batchStatLength) {
         this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
         this.attributes = attributes;
@@ -234,7 +234,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             long batchStatLength = 500;
             long classesAmount = 2;
 
-            BiFunction<String, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>, Double> heuristic = (s, node) -> {
+            SerializableHeuristic<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> heuristic = (s, node) -> {
                 double threshold = 0.5;
                 return Math.abs(threshold - node.getStatistics().getSplittingValue(s)) / threshold;
             };
