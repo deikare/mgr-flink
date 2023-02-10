@@ -64,7 +64,7 @@ public class VFDT extends KeyedProcessFunction<Long, Example, String> {
         long batchStatLength = Long.parseLong(params.get("batchStatLength", "500"));
         HashSet<String> attributes = new HashSet<>(Arrays.asList(params.get("attributes").split(",")));
 
-        BiFunction<String, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>, Double> heuristic = (s, node) -> {
+        SerializableHeuristic<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> heuristic = (s, node) -> {
             double threshold = 0.5;
             return Math.abs(threshold - node.getStatistics().getSplittingValue(s)) / threshold;
         };
