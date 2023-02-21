@@ -67,6 +67,15 @@ under the License.
             <scope>provided</scope>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/org.apache.flink/flink-test-utils -->
+        <dependency>
+            <groupId>org.apache.flink</groupId>
+            <artifactId>flink-test-utils</artifactId>
+            <version>${flink.version}</version>
+            <scope>test</scope>
+        </dependency>
+
+
         <!-- Add connector dependencies here. They must be in the default scope (compile). -->
 
         <!-- Example:

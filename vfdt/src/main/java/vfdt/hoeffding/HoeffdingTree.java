@@ -264,7 +264,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             System.out.println("No file found");
             e.printStackTrace();
         }
-//        catch (UnsupportedEncodingException e) {
+//        } catch (UnsupportedEncodingException e) {
 //            throw new RuntimeException(e);
 //        }
     }
