@@ -2,7 +2,6 @@ package vfdt.hoeffding;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 
 public class NodeStatistics implements StatisticsInterface {

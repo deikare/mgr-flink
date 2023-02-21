@@ -6,17 +6,12 @@ import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
-import org.apache.flink.runtime.state.FunctionInitializationContext;
-import org.apache.flink.runtime.state.FunctionSnapshotContext;
-import org.apache.flink.streaming.api.checkpoint.CheckpointedFunction;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
-import org.apache.flink.streaming.api.functions.ProcessFunction;
 import org.apache.flink.util.Collector;
 import vfdt.hoeffding.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
-import java.util.function.BiFunction;
 
 
 public class VFDT extends KeyedProcessFunction<Long, Example, String> {
@@ -25,37 +20,22 @@ public class VFDT extends KeyedProcessFunction<Long, Example, String> {
     @Override
     public void processElement(Example example, KeyedProcessFunction<Long, Example, String>.Context context, Collector<String> collector) throws Exception {
         HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = treeValueState.value();
-//        if (tree == null)
-//            tree = new HoeffdingTree<>();
-//        tree.train(example);
-//        tree.predict(example);
+        if (tree == null)
+            tree = createTree();
+        tree.train(example);
+        tree.predict(example);
         treeValueState.update(tree);
     }
 
     @Override
-    public void open(Configuration parameters) {
-        TypeInformation<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> info = TypeInformation.of(new TypeHint<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>>() {
-            @Override
-            public TypeInformation<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> getTypeInfo() {
-                return super.getTypeInfo();
-            }
+    public void close() throws Exception {
+        super.close();
+        HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = treeValueState.value();
+        if (tree != null)
+            tree.printStatisticsToFile("/home/deikare/wut/streaming-datasets/" + "elec.csv");
+    }
 
-            @Override
-            public int hashCode() {
-                return super.hashCode();
-            }
-
-            @Override
-            public boolean equals(Object obj) {
-                return super.equals(obj);
-            }
-
-            @Override
-            public String toString() {
-                return super.toString();
-            }
-        });
-
+    private HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createTree() {
         ParameterTool params = (ParameterTool) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
         long classesNumber = Long.parseLong(params.get("classesNumber", "2"));
         double delta = Double.parseDouble(params.get("delta", "0.05"));
@@ -71,10 +51,15 @@ public class VFDT extends KeyedProcessFunction<Long, Example, String> {
 
         SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
 
-        HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(classesNumber, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
+        return new HoeffdingTree<>(classesNumber, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
+    }
 
+    @Override
+    public void open(Configuration parameters) {
 
-        treeValueState = getRuntimeContext().getState(new ValueStateDescriptor<>("tree-state", info, tree)); //beware of deprecated
-//        treeValueState = getRuntimeContext().getState(new ValueStateDescriptor<>("tree-state", info));
+        TypeInformation<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> info = TypeInformation.of(new TypeHint<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>>() {
+        });
+
+        treeValueState = getRuntimeContext().getState(new ValueStateDescriptor<>("tree-state", info));
     }
 }

@@ -18,23 +18,17 @@
 
 package vfdt;
 
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.connector.file.src.FileSource;
-import org.apache.flink.connector.file.src.reader.TextLineInputFormat;
-import org.apache.flink.core.fs.Path;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.annotation.JsonPropertyOrder;
-import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.dataformat.csv.CsvSchema;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import vfdt.hoeffding.*;
+import vfdt.hoeffding.Example;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.*;
-import java.util.function.BiFunction;
-import java.util.stream.Collectors;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Scanner;
 
 /**
  * Skeleton for a Flink DataStream Job.
@@ -97,10 +91,10 @@ public class DataStreamJob {
     }
 
     public static void main(String[] args) throws Exception {
+
         // Sets up the execution environment, which is the main entry point
         // to building Flink applications.
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
-//        env.getConfig().enableForceAvro();
 
         final String filepath = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
 
