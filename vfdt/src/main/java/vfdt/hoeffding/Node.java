@@ -7,7 +7,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     private double splittingValue;
     private String splittingAttribute;
 
-    private N_S statistics;
+    private final N_S statistics;
     private boolean leaf;
 
     public Node(B statisticsBuilder) {
@@ -37,10 +37,6 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
 
     public boolean isLeaf() {
         return leaf;
-    }
-
-    public void setLeaf(boolean leaf) {
-        this.leaf = leaf;
     }
 
     public void split(String splittingAttribute, B statisticsBuilder) {

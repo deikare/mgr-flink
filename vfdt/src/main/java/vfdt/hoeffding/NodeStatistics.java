@@ -7,7 +7,7 @@ import java.util.Map;
 public class NodeStatistics implements StatisticsInterface {
     private long n;
 
-    private HashMap<String, Long> classCounts;
+    private final HashMap<String, Long> classCounts;
 
     public NodeStatistics() {
         n = 0;
@@ -17,10 +17,7 @@ public class NodeStatistics implements StatisticsInterface {
     public void update(Example example) {
         n++;
         String exampleClass = example.getClassName();
-        Long count = classCounts.get(exampleClass);
-        if (count == null)
-            classCounts.put(exampleClass, 1L);
-        else classCounts.put(exampleClass, classCounts.get(exampleClass) + 1L);
+        classCounts.merge(exampleClass, 1L, Long::sum);
 
     }
 
