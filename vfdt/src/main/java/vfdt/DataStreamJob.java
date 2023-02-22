@@ -108,7 +108,9 @@ public class DataStreamJob {
         ParameterTool params = getVFDTOptions(classesAmount, delta, data.f1, tau, nMin, batchStatLength);
         env.getConfig().setGlobalJobParameters(params);
 
-        env.fromCollection(data.f0).keyBy(Example::getId).process(new VFDT());
+        env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new VFDT());
 
 
         /*

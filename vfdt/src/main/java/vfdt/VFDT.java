@@ -23,8 +23,10 @@ public class VFDT extends KeyedProcessFunction<Long, Example, String> {
         if (tree == null)
             tree = createTree();
         tree.train(example);
-        tree.predict(example);
+        String result = tree.predict(example);
         treeValueState.update(tree);
+        String msg = "Tree predicted " + result + " on sample " + example.getClassName();
+        collector.collect(msg); //TODO print collector
     }
 
     @Override
