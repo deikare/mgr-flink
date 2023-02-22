@@ -4,11 +4,11 @@ import java.util.LinkedList;
 import java.util.stream.Collectors;
 
 public class AllTreeStatistics {
-    private TreeTotalStatistics totalStats;
-    private long batchLength;
-    private LinkedList<Long> samplesOnSplit;
+    private final TreeTotalStatistics totalStats;
+    private final long batchLength;
+    private final LinkedList<Long> samplesOnSplit;
 
-    private LinkedList<BasicTreeStatistics> batchStats;
+    private final LinkedList<BasicTreeStatistics> batchStats;
 
     public AllTreeStatistics(long batchLength) {
         this.batchLength = batchLength;
@@ -47,6 +47,10 @@ public class AllTreeStatistics {
                 "\nsamplesOnSplit: " + samplesOnSplit +
                 "\nbatchStats:\n" + batchStats.stream().map(BasicTreeStatistics::toString).collect(Collectors.joining("\n")) +
                 '}';
+    }
+
+    public long getN() {
+        return totalStats.getN();
     }
 
     public String totalStatisticsToString() {

@@ -18,16 +18,8 @@ public class Example {
         return className;
     }
 
-    public void setClassName(String className) {
-        this.className = className;
-    }
-
     public HashMap<String, Double> getAttributes() {
         return attributes;
-    }
-
-    public void setAttributes(HashMap<String, Double> attributes) {
-        this.attributes = attributes;
     }
 
     @Override

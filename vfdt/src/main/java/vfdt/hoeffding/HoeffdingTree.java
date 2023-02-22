@@ -14,8 +14,6 @@ import java.util.logging.Logger;
 
 
 /*
-TODO lista pytań:
-- TODO !!! najważniejsze - czy update statystyk nie powinien być zawsze, niezależnie od klasy większościowej?
 - kwestia implementacji w Flinku - czy zrobić po prostu obiekt drzewa przy użyciu ValueState<Drzewo>, potem zrównoleglanie z wykorzystaniem Flinka
 
 - kwestia klasyfikatora w liściu drzewa - czy zostawić statystycznie obliczaną klasę większościową,
@@ -49,15 +47,10 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
     - algorytm
     - eksperymenty
 
-TODO!!! zrobić statystyki i wrzucić do sprawka
-TODO - naprawić podział na klasyfikację i na trening
  */
 
 //Parametry:
 
-//TODO check if B can be replaced by static method in NodeStatistics class
-
-//TODO miary wydajności:
  /*
  histogramy:
 - średnia szybkość przeglądania drzewa
@@ -71,31 +64,26 @@ TODO - naprawić podział na klasyfikację i na trening
  */
 
 public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
-    private Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
-    private long n; //TODO - figure out
-    private long nMin;
+    private final Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
+    private final long nMin;
 
-    private long batchStatLength;
-    private int R;
-    private double delta;
-    private HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
-    private double tau;
-    private Node<N_S, B> root;
-    private B statisticsBuilder;
-    private SerializableHeuristic<N_S, B> heuristic;
+    private final long batchStatLength;
+    private final int R;
+    private final double delta;
+    private final HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
+    private final double tau;
+    private final Node<N_S, B> root;
+    private final B statisticsBuilder;
+    private final SerializableHeuristic<N_S, B> heuristic;
 
-    private AllTreeStatistics treeStatistics;
+    private final AllTreeStatistics treeStatistics;
 
-
-    public HoeffdingTree() {
-    }
 
     public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, SerializableHeuristic<N_S, B> heuristic, long batchStatLength) {
         this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
         this.attributes = attributes;
         this.tau = tau;
-        this.n = 0;
         this.nMin = nMin;
         this.statisticsBuilder = statisticsBuilder;
         this.heuristic = heuristic;
@@ -122,7 +110,6 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         logger.info("Training: " + example.toString());
 
         leaf.updateStatistics(example);
-        n++;
 
         if (leaf.getN() > nMin) {
             leaf.resetN();
@@ -163,7 +150,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     }
 
     private double getEpsilon() {
-        return Math.sqrt(Math.pow(R, 2) * Math.log(2 / delta) / (2 * n));
+        return Math.sqrt(Math.pow(R, 2) * Math.log(2 / delta) / (2 * treeStatistics.getN()));
     }
 
     private class HighestHeuristicPOJO {

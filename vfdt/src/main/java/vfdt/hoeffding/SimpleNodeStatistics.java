@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 public class SimpleNodeStatistics extends NodeStatistics {
-    private HashMap<String, HashMap<Double, Long>> attributeValueCounts;
+    private final HashMap<String, HashMap<Double, Long>> attributeValueCounts;
 
     public SimpleNodeStatistics(HashSet<String> attributes) {
         super();
@@ -30,7 +30,6 @@ public class SimpleNodeStatistics extends NodeStatistics {
             } else {
                 attributeValuesCounter.put(value, valueCounts + 1);
             }
-            //TODO verify, if attributeValueCounts needs to be updated on internal map update
         }
     }
 

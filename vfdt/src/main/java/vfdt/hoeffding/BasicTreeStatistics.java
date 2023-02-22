@@ -30,8 +30,8 @@ public class BasicTreeStatistics {
         }
     }
 
-    private TreeStat classificationStats;
-    private TreeStat learningStats;
+    private final TreeStat classificationStats;
+    private final TreeStat learningStats;
 
     public BasicTreeStatistics() {
         classificationStats = new TreeStat();
@@ -51,10 +51,6 @@ public class BasicTreeStatistics {
 
     public long getN() {
         return n;
-    }
-
-    public long getCorrectClassifications() {
-        return correctClassifications;
     }
 
     @Override
