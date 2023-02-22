@@ -18,8 +18,13 @@
 
 package vfdt;
 
+import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.connector.base.DeliveryGuarantee;
+import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
+import org.apache.flink.connector.kafka.sink.KafkaSink;
+import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.hoeffding.Example;
 
@@ -108,9 +113,23 @@ public class DataStreamJob {
         ParameterTool params = getVFDTOptions(classesAmount, delta, data.f1, tau, nMin, batchStatLength);
         env.getConfig().setGlobalJobParameters(params);
 
-        env.fromCollection(data.f0)
+        KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
+                .setBootstrapServers("localhost:9092")
+                .setRecordSerializer(KafkaRecordSerializationSchema.builder()
+                        .setTopic("tmp")
+                        .setValueSerializationSchema(new SimpleStringSchema())
+                        .build()
+                )
+                .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
+                .build();
+
+        DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new VFDT());
+                .process(new VFDT()).name("process-examples");
+
+        stream.addSink(new ProcessSink()).name("std-out-sink");
+        stream.sinkTo(kafkaSink);
+
 
 
         /*
