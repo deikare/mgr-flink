@@ -2,6 +2,7 @@ package vfdt.hoeffding;
 
 import com.google.gson.Gson;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -10,7 +11,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
 import java.util.function.BiFunction;
-import java.util.logging.Logger;
+
+import org.slf4j.Logger;
 
 
 /*
@@ -64,7 +66,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
  */
 
 public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
-    private final Logger logger = Logger.getLogger(HoeffdingTree.class.getName());
+    private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
     private final long nMin;
 
     private final long batchStatLength;
