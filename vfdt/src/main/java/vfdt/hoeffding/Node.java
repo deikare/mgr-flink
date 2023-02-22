@@ -8,10 +8,8 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     private String splittingAttribute;
 
     private final N_S statistics;
-    private boolean leaf;
 
     public Node(B statisticsBuilder) {
-        leaf = true;
         this.statistics = statisticsBuilder.build();
         leftChild = null;
         rightChild = null;
@@ -21,7 +19,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     public Node<N_S, B> getChild(Example example) {
         Node<N_S, B> result = null;
 
-        if (!leaf) {
+        if (!isLeaf()) {
             Double attributeValue = example.getAttributes().get(splittingAttribute);
             if (attributeValue != null) {
                 result = (attributeValue <= splittingValue) ? leftChild : rightChild;
@@ -36,11 +34,10 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     }
 
     public boolean isLeaf() {
-        return leaf;
+        return leftChild == null || rightChild == null;
     }
 
     public void split(String splittingAttribute, B statisticsBuilder) {
-        this.leaf = false;
         this.splittingAttribute = splittingAttribute;
         this.splittingValue = statistics.getSplittingValue(splittingAttribute);
         this.leftChild = new Node<>(statisticsBuilder);
