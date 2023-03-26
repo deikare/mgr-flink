@@ -14,6 +14,7 @@ import java.util.function.BiFunction;
 
 import org.slf4j.Logger;
 
+//kafdrop
 
 /*
 - kwestia implementacji w Flinku - czy zrobić po prostu obiekt drzewa przy użyciu ValueState<Drzewo>, potem zrównoleglanie z wykorzystaniem Flinka
@@ -126,10 +127,10 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
                 treeStatistics.updateOnNodeSplit(false);
-                leaf.split(pojo.attribute, statisticsBuilder);
+                leaf.split(pojo.attribute, statisticsBuilder, example);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
-                leaf.split(pojo.attribute, statisticsBuilder);
+                leaf.split(pojo.attribute, statisticsBuilder, example);
                 treeStatistics.updateOnNodeSplit(true);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
@@ -243,8 +244,11 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
 
                 String className = attributesValuesAsString[n];
                 Example example = new Example(className, attributesMap);
-                tree.predict(example);
+
                 tree.train(example);
+
+                if (tree.predict(example) == null)
+                    tree.predict(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
             }
 
             System.out.println(tree.printStatistics());
