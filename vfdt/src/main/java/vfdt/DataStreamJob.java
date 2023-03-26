@@ -116,7 +116,7 @@ public class DataStreamJob {
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
                 .setBootstrapServers("localhost:9092")
                 .setRecordSerializer(KafkaRecordSerializationSchema.builder()
-                        .setTopic("tmp")
+                        .setTopic("simple-vfdt")
                         .setValueSerializationSchema(new SimpleStringSchema())
                         .build()
                 )
