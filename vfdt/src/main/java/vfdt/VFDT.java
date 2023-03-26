@@ -39,11 +39,11 @@ public class VFDT extends KeyedProcessFunction<Long, Example, String> {
 
     private HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createTree() {
         ParameterTool params = (ParameterTool) getRuntimeContext().getExecutionConfig().getGlobalJobParameters();
-        long classesNumber = Long.parseLong(params.get("classesNumber", "2"));
-        double delta = Double.parseDouble(params.get("delta", "0.05"));
-        double tau = Double.parseDouble(params.get("tau", "0.2"));
-        long nMin = Long.parseLong(params.get("nMin", "50"));
-        long batchStatLength = Long.parseLong(params.get("batchStatLength", "500"));
+        long classesNumber = params.getLong("classesNumber", 2);
+        double delta = params.getDouble("delta", 0.05);
+        double tau = params.getDouble("tau", 0.2);
+        long nMin = params.getLong("nMin", 50);
+        long batchStatLength = params.getLong("batchStatLength", 500);
         HashSet<String> attributes = new HashSet<>(Arrays.asList(params.get("attributes").split(",")));
 
         SerializableHeuristic<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> heuristic = (s, node) -> {
