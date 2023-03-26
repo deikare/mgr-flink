@@ -37,7 +37,13 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         return leftChild == null || rightChild == null;
     }
 
-    public void split(String splittingAttribute, B statisticsBuilder) {
+    public void split(String splittingAttribute, B statisticsBuilder, Example example) {
+        split(splittingAttribute, statisticsBuilder);
+        Node<N_S, B> child = getChild(example);
+        child.updateStatistics(example);
+    }
+
+    private void split(String splittingAttribute, B statisticsBuilder) {
         this.splittingAttribute = splittingAttribute;
         this.splittingValue = statistics.getSplittingValue(splittingAttribute);
         this.leftChild = new Node<>(statisticsBuilder);

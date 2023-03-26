@@ -23,13 +23,15 @@ public class AllTreeStatistics {
     public void updateOnLearning(long toLeafTraverseDuration, long nodesOnTraverseCount, long totalDuration) {
         totalStats.updateOnLearning(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration);
         batchStats.getLast().updateOnLearning(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration);
-        if (totalStats.getN() % batchLength == 0)
-            batchStats.addLast(new BasicTreeStatistics());
+
     }
 
     public void updateOnClassification(long toLeafTraverseDuration, long nodesOnTraverseCount, long totalDuration, boolean isCorrect) {
         totalStats.updateOnClassification(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration, isCorrect);
         batchStats.getLast().updateOnClassification(toLeafTraverseDuration, nodesOnTraverseCount, totalDuration, isCorrect);
+
+        if (getN() % batchLength == 0)
+            batchStats.addLast(new BasicTreeStatistics());
     }
 
     public void updateOnNodeSplit(boolean isReasonTau) {
