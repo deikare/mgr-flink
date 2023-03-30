@@ -125,10 +125,12 @@ public class DataStreamJob {
 
         DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new VFDT()).name("process-examples");
+                .process(new VfdtProcessFunction()).name("process-examples");
 
         stream.addSink(new ProcessSink()).name("std-out-sink");
         stream.sinkTo(kafkaSink);
+
+        stream.print("std-out-sink");
 
 
 
