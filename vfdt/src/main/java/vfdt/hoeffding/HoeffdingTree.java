@@ -10,7 +10,6 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.*;
-import java.util.function.BiFunction;
 
 import org.slf4j.Logger;
 
@@ -186,6 +185,10 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
 
     public String printStatistics() {
         return treeStatistics.totalStatisticsToString();
+    }
+
+    public String getSimpleStatistics() {
+        return treeStatistics.toStringSimple();
     }
 
     public void printStatisticsToFile(String dataPath) throws FileNotFoundException, UnsupportedEncodingException {

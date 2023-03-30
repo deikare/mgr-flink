@@ -25,7 +25,7 @@ public class VfdtProcessFunction extends KeyedProcessFunction<Long, Example, Str
         tree.train(example);
         String result = tree.predict(example);
         treeValueState.update(tree);
-        String msg = "Tree predicted " + result + " on sample " + example.getClassName();
+        String msg = "Tree predicted " + result + " on sample " + example.getClassName() + ", " + tree.getSimpleStatistics();
         collector.collect(msg); //TODO print collector
     }
 

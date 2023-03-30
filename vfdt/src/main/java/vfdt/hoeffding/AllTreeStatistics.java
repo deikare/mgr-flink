@@ -58,4 +58,8 @@ public class AllTreeStatistics {
     public String totalStatisticsToString() {
         return "totalStats:\n" + totalStats;
     }
+
+    public String toStringSimple() {
+        return totalStats.toStringSimple();
+    }
 }
