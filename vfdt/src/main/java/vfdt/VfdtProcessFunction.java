@@ -14,7 +14,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 
-public class VFDT extends KeyedProcessFunction<Long, Example, String> {
+public class VfdtProcessFunction extends KeyedProcessFunction<Long, Example, String> {
     private transient ValueState<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> treeValueState;
 
     @Override
