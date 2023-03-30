@@ -62,4 +62,8 @@ public class BasicTreeStatistics {
                 "\n\t\tclassificationStats = " + classificationStats +
                 "\n\t\tlearningStats = " + learningStats;
     }
+
+    public String toStringSimple() {
+        return "Accuracy: " + ((double) (correctClassifications) / (double) (n)) + " (" + correctClassifications + "/" + n + ")";
+    }
 }
