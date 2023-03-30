@@ -4,10 +4,10 @@ import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ProcessSink implements SinkFunction<String> {
-    public final Logger logger = LoggerFactory.getLogger(ProcessSink.class);
+public class LoggingSink implements SinkFunction<String> {
+    public final Logger logger = LoggerFactory.getLogger(LoggingSink.class);
 
-    public ProcessSink() {
+    public LoggingSink() {
     }
 
     @Override

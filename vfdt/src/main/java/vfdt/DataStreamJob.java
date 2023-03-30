@@ -127,8 +127,8 @@ public class DataStreamJob {
                 .keyBy(Example::getId)
                 .process(new VfdtProcessFunction()).name("process-examples");
 
-        stream.addSink(new ProcessSink()).name("std-out-sink");
-        stream.sinkTo(kafkaSink);
+        stream.addSink(new LoggingSink()).name("logging-sink");
+        stream.sinkTo(kafkaSink).name("kafka-sink");
 
         stream.print("std-out-sink");
 
