@@ -105,7 +105,7 @@ public class DataStreamJob {
 
         Tuple2<LinkedList<Example>, String> data = readExamples(filepath);
 
-        double delta = 0.05;
+        double delta = 0.05; //TODO - add dto with consts and default values
         double tau = 0.2;
         long nMin = 50;
         long batchStatLength = 500;
