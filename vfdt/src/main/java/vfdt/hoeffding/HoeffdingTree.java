@@ -13,7 +13,12 @@ import java.util.*;
 
 import org.slf4j.Logger;
 
-//kafdrop
+/*TODO etap 2
+- dorzucić grafanę (lub inne narzędzie UI) robiącą wykres dokładności w czasie rzeczywistym
+- dopisać do pracy mgr
+- zapuścić na innych danych
+- poczytać o klasyfikatorach bayesowskich
+sdasdsd*/
 
 /*
 - kwestia implementacji w Flinku - czy zrobić po prostu obiekt drzewa przy użyciu ValueState<Drzewo>, potem zrównoleglanie z wykorzystaniem Flinka
