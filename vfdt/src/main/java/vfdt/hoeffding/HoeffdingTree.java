@@ -14,6 +14,7 @@ import java.util.*;
 import org.slf4j.Logger;
 
 /*TODO etap 2
+- przerzucić liczenie statystyk do grafany - process function zwraca jsona z zmierzonymi statystykami
 - dorzucić grafanę (lub inne narzędzie UI) robiącą wykres dokładności w czasie rzeczywistym
 - dopisać do pracy mgr
 - zapuścić na innych danych

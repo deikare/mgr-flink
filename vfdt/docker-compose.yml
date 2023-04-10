@@ -35,3 +35,11 @@ services:
     environment:
       KAFKA_BROKERCONNECT: "kafka:29092"
 
+  grafana:
+    image: grafana/grafana:8.5.22-ubuntu
+    depends_on:
+      - kafka
+    ports:
+      - "3000:3000"
+    environment:
+      GF_INSTALL_PLUGINS: "hamedkarbasi93-kafka-datasource"
