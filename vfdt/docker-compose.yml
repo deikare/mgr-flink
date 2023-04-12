@@ -1,5 +1,5 @@
 ---
-version: '3'
+version: '3.8'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.3.0
@@ -43,3 +43,33 @@ services:
       - "3000:3000"
     environment:
       GF_INSTALL_PLUGINS: "hamedkarbasi93-kafka-datasource"
+
+  influxdb:
+    image: influxdb:2.7.0
+    volumes:
+      # Mount for influxdb data directory and configuration
+      - ./mounts/influxdbv2:/var/lib/influxdb2:rw
+    ports:
+      - "8086:8086"
+
+  influxdb-init:
+    image: influxdb:2.7.0
+    links:
+      - influxdb
+    entrypoint: /bin/bash /etc/influxdb/configs/config.sh
+    restart: on-failure:10
+    depends_on:
+      - influxdb
+    volumes:
+      - ./configs/influxdb:/etc/influxdb/configs
+      - ./mounts/influxdbv2:/var/lib/influxdb2
+
+#  telegraf:
+#    image: telegraf:1.26.1
+#    depends_on:
+#      - influxdb
+#    volumes:
+#      # Mount for telegraf config
+#      - ./telegraf/mytelegraf.conf:/etc/telegraf/telegraf.conf:ro
+#    env_file:
+#      - influxv2.env
