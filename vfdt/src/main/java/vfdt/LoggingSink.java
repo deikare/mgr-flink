@@ -1,17 +1,18 @@
 package vfdt;
 
+import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class LoggingSink implements SinkFunction<String> {
+public class LoggingSink implements SinkFunction<Tuple8<Long, Long, Long, Long, Long, Long, Long, Long>> {
     public final Logger logger = LoggerFactory.getLogger(LoggingSink.class);
 
     public LoggingSink() {
     }
 
     @Override
-    public void invoke(String value, Context context) throws Exception {
-        logger.info(value);
+    public void invoke(Tuple8<Long, Long, Long, Long, Long, Long, Long, Long> value, Context context) throws Exception {
+        logger.info(value.toString());
     }
 }

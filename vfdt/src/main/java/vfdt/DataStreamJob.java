@@ -20,6 +20,8 @@ package vfdt;
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple8;
+import org.apache.flink.api.java.typeutils.runtime.TupleSerializer;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
@@ -113,17 +115,17 @@ public class DataStreamJob {
         ParameterTool params = getVFDTOptions(classesAmount, delta, data.f1, tau, nMin, batchStatLength);
         env.getConfig().setGlobalJobParameters(params);
 
-        KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
+        KafkaSink<String> kafkaSink = KafkaSink.<Tuple8<Long, Long, Long, Long, Long, Long, Long, Long>>builder()
                 .setBootstrapServers("localhost:9092")
                 .setRecordSerializer(KafkaRecordSerializationSchema.builder()
                         .setTopic("simple-vfdt")
-                        .setValueSerializationSchema(new SimpleStringSchema())
+                        .setValueSerializationSchema(new TupleSerializer<Tuple8<Long, Long, Long, Long, Long, Long, Long, Long>>())
                         .build()
                 )
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
-        DataStream<String> stream = env.fromCollection(data.f0)
+        DataStream<Tuple8<Long, Long, Long, Long, Long, Long, Long, Long>> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
                 .process(new VfdtProcessFunction()).name("process-examples");
 

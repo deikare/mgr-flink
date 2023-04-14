@@ -2,6 +2,8 @@ package vfdt.hoeffding;
 
 import com.google.gson.Gson;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple5;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
@@ -100,7 +102,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         treeStatistics = new AllTreeStatistics(batchStatLength);
     }
 
-    public String predict(Example example) throws RuntimeException {
+    public Tuple4<Long, Long, Long, Long> predict(Example example) throws RuntimeException {
         Instant start = Instant.now();
         Tuple3<Node<N_S, B>, Long, Long> leafWithTimes = getLeaf(example);
         Node<N_S, B> leaf = leafWithTimes.f0;
@@ -108,10 +110,10 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         long duration = Duration.between(start, Instant.now()).toNanos();
         treeStatistics.updateOnClassification(leafWithTimes.f1, leafWithTimes.f2, duration, Objects.equals(predictedClass, example.getClassName()));
         logger.info(example + " predicted with " + predictedClass);
-        return predictedClass;
+        return new Tuple4<>(0L, 0L, 0L, 0L);
     }
 
-    public void train(Example example) throws RuntimeException {
+    public Tuple4<Long, Long, Long, Long> train(Example example) throws RuntimeException {
         Instant start = Instant.now();
         Tuple3<Node<N_S, B>, Long, Long> leafWithTimes = getLeaf(example);
         Node<N_S, B> leaf = leafWithTimes.f0;
@@ -144,6 +146,8 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         treeStatistics.updateOnLearning(leafWithTimes.f1, leafWithTimes.f2, duration);
 
         logger.info(leaf.getStatistics().toString());
+
+        return new Tuple4<>(treeStatistics.getN(), leafWithTimes.f1, leafWithTimes.f2, duration);
     }
 
     private Tuple3<Node<N_S, B>, Long, Long> getLeaf(Example example) {

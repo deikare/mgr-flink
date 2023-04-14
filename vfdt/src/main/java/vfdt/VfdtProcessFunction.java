@@ -4,6 +4,8 @@ import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
@@ -14,18 +16,19 @@ import java.util.Arrays;
 import java.util.HashSet;
 
 
-public class VfdtProcessFunction extends KeyedProcessFunction<Long, Example, String> {
+public class VfdtProcessFunction extends KeyedProcessFunction<Long, Example, HoeffdingTreeProcessOutputJson> {
     private transient ValueState<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> treeValueState;
 
+    //todo write base processfunction, that has e.g. experimentId generator
     @Override
-    public void processElement(Example example, KeyedProcessFunction<Long, Example, String>.Context context, Collector<String> collector) throws Exception {
+    public void processElement(Example example, KeyedProcessFunction<Long, Example, HoeffdingTreeProcessOutputJson>.Context context, Collector<HoeffdingTreeProcessOutputJson> collector) throws Exception {
         HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = treeValueState.value();
         if (tree == null)
             tree = createTree();
-        tree.train(example);
-        String result = tree.predict(example);
+        Tuple4<Long, Long, Long, Long> trainResult = tree.train(example);
+        Tuple4<Long, Long, Long, Long> predictResult = tree.predict(example);
         treeValueState.update(tree);
-        String msg = "Tree predicted " + result + " on sample " + example.getClassName() + ", " + tree.getSimpleStatistics();
+        HoeffdingTreeProcessOutputJson msg = new Tuple8<>(trainResult.f0, trainResult.f1, trainResult.f2, trainResult.f3, predictResult.f0, predictResult.f1, predictResult.f2, predictResult.f3);
         collector.collect(msg); //TODO print collector
     }
 
