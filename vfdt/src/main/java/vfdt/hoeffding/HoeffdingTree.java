@@ -1,19 +1,21 @@
 package vfdt.hoeffding;
 
 import com.google.gson.Gson;
-import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.tuple.Tuple4;
-import org.apache.flink.api.java.tuple.Tuple5;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.*;
-
-import org.slf4j.Logger;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Scanner;
 
 /*TODO etap 2
 - przerzucić liczenie statystyk do grafany - process function zwraca jsona z zmierzonymi statystykami
@@ -73,7 +75,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
 - liczba próbek błędnie sklasyfikowanych
  */
 
-public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
+public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifier {
     private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
     private final long nMin;
 
@@ -102,21 +104,22 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         treeStatistics = new AllTreeStatistics(batchStatLength);
     }
 
-    public Tuple4<Long, Long, Long, Long> predict(Example example) throws RuntimeException {
+    protected Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
         Instant start = Instant.now();
-        Tuple3<Node<N_S, B>, Long, Long> leafWithTimes = getLeaf(example);
-        Node<N_S, B> leaf = leafWithTimes.f0;
+        Node<N_S, B> leaf = getLeaf(example);
         String predictedClass = leaf.getMajorityClass();
-        long duration = Duration.between(start, Instant.now()).toNanos();
-        treeStatistics.updateOnClassification(leafWithTimes.f1, leafWithTimes.f2, duration, Objects.equals(predictedClass, example.getClassName()));
         logger.info(example + " predicted with " + predictedClass);
-        return new Tuple4<>(0L, 0L, 0L, 0L);
+        return new Tuple2<>(predictedClass, performances);
     }
 
-    public Tuple4<Long, Long, Long, Long> train(Example example) throws RuntimeException {
-        Instant start = Instant.now();
-        Tuple3<Node<N_S, B>, Long, Long> leafWithTimes = getLeaf(example);
-        Node<N_S, B> leaf = leafWithTimes.f0;
+    @Override
+    public String generateClassifierParams() {
+        return "r" + R + "_d" + delta + "_t" + tau + "_n" + nMin;
+    }
+
+    protected HashMap<String, Long> trainImplementation(Example example) throws RuntimeException {
+        Tuple2<Node<N_S, B>, HashMap<String, Long>> leafWithPerformance = getLeafWithPerformance(example);
+        Node<N_S, B> leaf = leafWithPerformance.f0;
         logger.info("Training: " + example.toString());
 
         leaf.updateStatistics(example);
@@ -142,15 +145,12 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
 
-        long duration = Duration.between(start, Instant.now()).toNanos();
-        treeStatistics.updateOnLearning(leafWithTimes.f1, leafWithTimes.f2, duration);
-
         logger.info(leaf.getStatistics().toString());
 
-        return new Tuple4<>(treeStatistics.getN(), leafWithTimes.f1, leafWithTimes.f2, duration);
+        return leafWithPerformance.f1;
     }
 
-    private Tuple3<Node<N_S, B>, Long, Long> getLeaf(Example example) {
+    private Tuple2<Node<N_S, B>, HashMap<String, Long>> getLeafWithPerformance(Example example) {
         Instant start = Instant.now();
         long count = 1;
         Node<N_S, B> result = root;
@@ -158,7 +158,18 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             count++;
             result = result.getChild(example);
         }
-        return new Tuple3<>(result, Duration.between(start, Instant.now()).toNanos(), count);
+        HashMap<String, Long> performanceResults = new HashMap<>();
+        performanceResults.put(HoeffdingTreeFields.NODES_DURING_TRAVERSAL_COUNT, count);
+        performanceResults.put(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, toNow(start));
+        return new Tuple2<>(result, performanceResults);
+    }
+
+    private Node<N_S, B> getLeaf(Example example) {
+        Node<N_S, B> result = root;
+        while (!(result.isLeaf()))
+            result = result.getChild(example);
+
+        return result;
     }
 
     private double getEpsilon() {
@@ -258,10 +269,10 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                 String className = attributesValuesAsString[n];
                 Example example = new Example(className, attributesMap);
 
-                tree.train(example);
+                tree.trainImplementation(example);
 
-                if (tree.predict(example) == null)
-                    tree.predict(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
+//                if (tree.classifyImplementation(example) == null)
+//                    tree.classifyImplementation(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
             }
 
             System.out.println(tree.printStatistics());
