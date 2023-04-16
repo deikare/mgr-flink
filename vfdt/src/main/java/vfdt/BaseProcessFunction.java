@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 
 public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
     private transient ValueState<C> classifierState;
-    private final Supplier<C> createClassifierFunction; //todo ask if its acceptable - probably not, so make serialization
+    private transient final Supplier<C> createClassifierFunction; //todo ask if its acceptable - probably not, so make serialization
     private transient ValueState<String> nameState;
     private transient ValueState<String> experimentIdState;
     private transient ValueState<String> datasetState;
@@ -68,7 +68,7 @@ public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessF
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
 
-        TypeInformation<C> classifierInfo = TypeInformation.of(new TypeHint<C>() {
+        TypeInformation<C> classifierInfo = TypeInformation.of(new TypeHint<C>() { //todo exception here - try to put this line as lambda in main
         });
         classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", classifierInfo));
         if (classifierState.value() == null)
