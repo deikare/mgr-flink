@@ -137,14 +137,12 @@ if __name__ == "__main__":
     # filename = "results/stat_elec_r1_d0.05_t0.2_n50_b500.txt"
     filenames = [
         "results/stat_elec_r1_d0.05_t0.2_n50_b500.txt",
-        "results/stat_elec_r1_d0.05_t0.2_n500_b500.txt",
-        "results/stat_elec_r1_d0.05_t0.2_n50_b500_no_h.txt"
     ]
 
     labels = [
-        "nMin = 50",
-        "nMin = 500",
-        "nMin = 50, no h"
+        # "nMin = 50",
+        # "nMin = 500",
+        # "nMin = 50, no h"
     ]
 
     data = read_data(filenames)
