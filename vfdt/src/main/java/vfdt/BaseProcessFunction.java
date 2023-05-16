@@ -18,24 +18,28 @@ import vfdt.hoeffding.Example;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
-    private transient ValueState<C> classifierState;
-    private transient final Supplier<C> createClassifierFunction; //todo ask if its acceptable - probably not, so make serialization
-    private transient ValueState<String> nameState;
-    private transient ValueState<String> experimentIdState;
-    private transient ValueState<String> datasetState;
+    protected transient ValueState<C> classifierState;
+    protected final ClassifierSupplier<C> createClassifierFunction; //todo i must make this class serializable
+    protected transient ValueState<String> nameState;
+    protected transient ValueState<String> experimentIdState;
+    protected transient ValueState<String> datasetState;
 
 
-    public BaseProcessFunction(Supplier<C> createClassifierFunction) {
+    public BaseProcessFunction(ClassifierSupplier<C> createClassifierFunction) {
         this.createClassifierFunction = createClassifierFunction;
     }
 
     @Override
     public void processElement(Example example, KeyedProcessFunction<Long, Example, String>.Context context, Collector<String> collector) throws Exception {
         C classifier = classifierState.value();
+        if (classifier == null)
+            classifier = createClassifierFunction.get();
+
 
         Tuple2<Long, HashMap<String, Long>> trainingResult = classifier.train(example);
         Tuple2<String, HashMap<String, Long>> classifyResult = classifier.classify(example, trainingResult.f1);
@@ -68,39 +72,39 @@ public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessF
     public void open(Configuration parameters) throws Exception {
         super.open(parameters);
 
-        TypeInformation<C> classifierInfo = TypeInformation.of(new TypeHint<C>() { //todo exception here - try to put this line as lambda in main
-        });
-        classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", classifierInfo));
-        if (classifierState.value() == null)
-            classifierState.update(createClassifierFunction.get());
+//        TypeInformation<C> classifierInfo = TypeInformation.of(new TypeHint<C>() { //todo exception here - try to put this line as lambda in main
+//        });
+//        classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", classifierInfo));
+//        if (classifierState.value() == null)
+//            classifierState.update(createClassifierFunction.get());
 
 
-//        ValueStateDescriptor<String> nameDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.CLASSIFIER_NAME, Types.STRING);
-//        nameState = getRuntimeContext().getState(nameDescriptor);
-//        if (nameState.value() == null) {
-//            ConfigOption<String> nameConfig = ConfigOptions
-//                    .key(BaseClassifierTags.CLASSIFIER_NAME)
-//                    .stringType()
-//                    .noDefaultValue();
-//            nameState.update(parameters.getString(nameConfig));
-//        }
-        nameState = initializeState(BaseClassifierTags.CLASSIFIER_NAME, parameters);
-//        ValueStateDescriptor<String> experimentIdDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.EXPERIMENT_ID, Types.STRING);
-//        experimentIdState = getRuntimeContext().getState(experimentIdDescriptor);
-//        if (experimentIdState.value() == null)
-//            experimentIdState.update(UUID.randomUUID().toString());
-        experimentIdState = initializeState(BaseClassifierTags.EXPERIMENT_ID, UUID.randomUUID().toString());
+/*        ValueStateDescriptor<String> nameDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.CLASSIFIER_NAME, Types.STRING);
+        nameState = getRuntimeContext().getState(nameDescriptor);
+        if (nameState.value() == null) {
+            ConfigOption<String> nameConfig = ConfigOptions
+                    .key(BaseClassifierTags.CLASSIFIER_NAME)
+                    .stringType()
+                    .noDefaultValue();
+            nameState.update(parameters.getString(nameConfig));
+        }*/
+//        nameState = initializeState(BaseClassifierTags.CLASSIFIER_NAME, parameters);
+        /*ValueStateDescriptor<String> experimentIdDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.EXPERIMENT_ID, Types.STRING);
+        experimentIdState = getRuntimeContext().getState(experimentIdDescriptor);
+        if (experimentIdState.value() == null)
+            experimentIdState.update(UUID.randomUUID().toString());*/
+//        experimentIdState = initializeState(BaseClassifierTags.EXPERIMENT_ID, UUID.randomUUID().toString());
 
-//        ValueStateDescriptor<String> datasetDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.DATASET, Types.STRING);
-//        datasetState = getRuntimeContext().getState(datasetDescriptor);
-//        if (datasetState.value() == null) {
-//            ConfigOption<String> datasetConfig = ConfigOptions
-//                    .key(BaseClassifierTags.DATASET)
-//                    .stringType()
-//                    .noDefaultValue();
-//            datasetState.update(parameters.getString(datasetConfig));
-//        }
-        datasetState = initializeState(BaseClassifierTags.DATASET, parameters);
+        /*ValueStateDescriptor<String> datasetDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.DATASET, Types.STRING);
+        datasetState = getRuntimeContext().getState(datasetDescriptor);
+        if (datasetState.value() == null) {
+            ConfigOption<String> datasetConfig = ConfigOptions
+                    .key(BaseClassifierTags.DATASET)
+                    .stringType()
+                    .noDefaultValue();
+            datasetState.update(parameters.getString(datasetConfig));
+        }*/
+//        datasetState = initializeState(BaseClassifierTags.DATASET, parameters);
 
     }
 

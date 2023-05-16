@@ -23,6 +23,7 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.api.java.typeutils.runtime.TupleSerializer;
 import org.apache.flink.api.java.utils.ParameterTool;
+import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
@@ -118,6 +119,8 @@ public class DataStreamJob {
         options.put(BaseClassifierTags.DATASET, dataset);
 
         env.getConfig().setGlobalJobParameters(ParameterTool.fromMap(options));
+        env.getConfig().registerKryoType(SerializableHeuristic.class);
+        env.getConfig().registerKryoType(ClassifierSupplier.class);
 
 
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
@@ -132,7 +135,7 @@ public class DataStreamJob {
 
         DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new BaseProcessFunction<>(() -> {
+                .process(new VfdtProcessFunctionN(() -> {
                     double delta = 0.05;
                     double tau = 0.2;
                     long nMin = 50;
@@ -147,6 +150,10 @@ public class DataStreamJob {
                     return new HoeffdingTree<>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
                 })).name("process-examples");
 
+//        DataStream<String> stream = env.fromCollection(data.f0)
+//                .keyBy(Example::getId)
+//                .process(new VfdtProcessTest())
+//                .name("process-examples");
 
         stream.addSink(new LoggingSink()).name("logging-sink");
         stream.sinkTo(kafkaSink).name("kafka-sink");
