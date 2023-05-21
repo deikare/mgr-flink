@@ -20,16 +20,12 @@ package vfdt;
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple8;
-import org.apache.flink.api.java.typeutils.runtime.TupleSerializer;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.configuration.Configuration;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import org.apache.kafka.common.serialization.StringSerializer;
 import vfdt.hoeffding.*;
 
 import java.io.File;
@@ -119,8 +115,7 @@ public class DataStreamJob {
         options.put(BaseClassifierTags.DATASET, dataset);
 
         env.getConfig().setGlobalJobParameters(ParameterTool.fromMap(options));
-        env.getConfig().registerKryoType(SerializableHeuristic.class);
-        env.getConfig().registerKryoType(ClassifierSupplier.class);
+//        env.getConfig().enableForceKryo();
 
 
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
@@ -135,21 +130,32 @@ public class DataStreamJob {
 
         DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new VfdtProcessFunctionN(() -> {
-                    double delta = 0.05;
-                    double tau = 0.2;
-                    long nMin = 50;
-                    long batchStatLength = 500;
-                    long classesAmount = 2;
-                    HashSet<String> attributes = data.f1;
-                    SerializableHeuristic<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> heuristic = (s, node) -> {
-                        double threshold = 0.5;
-                        return Math.abs(threshold - node.getStatistics().getSplittingValue(s)) / threshold;
-                    };
-                    SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-                    return new HoeffdingTree<>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
-                })).name("process-examples");
+                .process(new DummyProcessFunction());
 
+
+//        DataStream<String> stream = env.fromCollection(data.f0)
+//                .keyBy(Example::getId)
+//                .process(new VfdtProcessFunctionN() {
+//                    @Override
+//                    protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> getClassifier() {
+//                        double delta = 0.05;
+//                        double tau = 0.2;
+//                        long nMin = 50;
+//                        long batchStatLength = 500;
+//                        long classesAmount = 2;
+//                        HashSet<String> attributes = data.f1;
+//
+//                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
+//                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
+//                            @Override
+//                            protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+//                                double threshold = 0.5;
+//                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attribute)) / threshold;
+//                            }
+//                        };
+//                    }
+//                })
+//                .name("process-examples");
 //        DataStream<String> stream = env.fromCollection(data.f0)
 //                .keyBy(Example::getId)
 //                .process(new VfdtProcessTest())
@@ -158,7 +164,7 @@ public class DataStreamJob {
         stream.addSink(new LoggingSink()).name("logging-sink");
         stream.sinkTo(kafkaSink).name("kafka-sink");
 
-        stream.print("std-out-sink");
+//        stream.print("std-out-sink");
 
 
 

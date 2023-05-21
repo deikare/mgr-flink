@@ -75,7 +75,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
 - liczba próbek błędnie sklasyfikowanych
  */
 
-public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifier {
+public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifier {
     private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
     private final long nMin;
 
@@ -86,22 +86,22 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     private final double tau;
     private final Node<N_S, B> root;
     private final B statisticsBuilder;
-    private final SerializableHeuristic<N_S, B> heuristic;
 
-    private final AllTreeStatistics treeStatistics;
+//    private final AllTreeStatistics treeStatistics;
+
+    private long n = 0L;
 
 
-    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, SerializableHeuristic<N_S, B> heuristic, long batchStatLength) {
+    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, long batchStatLength) {
         this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
         this.attributes = attributes;
         this.tau = tau;
         this.nMin = nMin;
         this.statisticsBuilder = statisticsBuilder;
-        this.heuristic = heuristic;
         this.root = new Node<>(statisticsBuilder);
         this.batchStatLength = batchStatLength;
-        treeStatistics = new AllTreeStatistics(batchStatLength);
+//        treeStatistics = new AllTreeStatistics(batchStatLength);
     }
 
     protected Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
@@ -118,6 +118,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     }
 
     protected HashMap<String, Long> trainImplementation(Example example) throws RuntimeException {
+        n++;
         Tuple2<Node<N_S, B>, HashMap<String, Long>> leafWithPerformance = getLeafWithPerformance(example);
         Node<N_S, B> leaf = leafWithPerformance.f0;
         logger.info("Training: " + example.toString());
@@ -136,12 +137,12 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
                 throw new RuntimeException(msg);
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
-                treeStatistics.updateOnNodeSplit(false);
+//                treeStatistics.updateOnNodeSplit(false);
                 leaf.split(pojo.attribute, statisticsBuilder, example);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
                 leaf.split(pojo.attribute, statisticsBuilder, example);
-                treeStatistics.updateOnNodeSplit(true);
+//                treeStatistics.updateOnNodeSplit(true);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
 
@@ -173,7 +174,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
     }
 
     private double getEpsilon() {
-        return Math.sqrt(Math.pow(R, 2) * Math.log(2 / delta) / (2 * treeStatistics.getN()));
+        return Math.sqrt(Math.pow(R, 2) * Math.log(2 / delta) / (2 * n));
     }
 
     private class HighestHeuristicPOJO {
@@ -188,7 +189,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             String xbTemp = null;
 
             for (String attribute : attributes) {
-                Double h = heuristic.apply(attribute, node);
+                double h = heuristic(attribute, node);
                 if (xaTemp == null || h > hXaTemp) {
                     xaTemp = attribute;
                     hXaTemp = h;
@@ -204,13 +205,15 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         }
     }
 
-    public String printStatistics() {
-        return treeStatistics.totalStatisticsToString();
-    }
+    protected abstract double heuristic(String attribute, Node<N_S, B> node);
 
-    public String getSimpleStatistics() {
-        return treeStatistics.toStringSimple();
-    }
+//    public String printStatistics() {
+//        return treeStatistics.totalStatisticsToString();
+//    }
+//
+//    public String getSimpleStatistics() {
+//        return treeStatistics.toStringSimple();
+//    }
 
     public void printStatisticsToFile(String dataPath) throws FileNotFoundException, UnsupportedEncodingException {
 //stat_data_r._d._t._n._b
@@ -220,7 +223,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
         String statFileName = "stat_" + dataFileNameNoExtension + "_r" + R + "_d" + delta + "_t" + tau + "_n" + nMin + "_b" + batchStatLength + ".txt";
         String statFilePath = System.getenv("MGR_FLINK_RESULTS_PATH") + "/" + statFileName;
         PrintWriter writer = new PrintWriter(statFilePath, "UTF-8");
-        writer.write(new Gson().toJson(treeStatistics));
+//        writer.write(new Gson().toJson(treeStatistics));
         writer.close();
 
         System.out.println("Printing STAT to file: " + statFileName);
@@ -248,14 +251,13 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
             long batchStatLength = 500;
             long classesAmount = 2;
 
-            SerializableHeuristic<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> heuristic = (s, node) -> {
-                double threshold = 0.5;
-                return Math.abs(threshold - node.getStatistics().getSplittingValue(s)) / threshold;
+
+            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
+                @Override
+                protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                    return 0;
+                }
             };
-
-//            heuristic = (s, node) -> 0.0;
-
-            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
 
             while (scanner.hasNext()) {
                 line = scanner.nextLine();
@@ -275,7 +277,7 @@ public class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuild
 //                    tree.classifyImplementation(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
             }
 
-            System.out.println(tree.printStatistics());
+//            System.out.println(tree.printStatistics());
 //            tree.printStatisticsToFile(path);
         } catch (FileNotFoundException e) {
             System.out.println("No file found");

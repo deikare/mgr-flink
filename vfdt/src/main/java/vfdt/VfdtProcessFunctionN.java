@@ -8,11 +8,9 @@ import vfdt.hoeffding.HoeffdingTree;
 import vfdt.hoeffding.SimpleNodeStatistics;
 import vfdt.hoeffding.SimpleNodeStatisticsBuilder;
 
-import java.util.function.Supplier;
-
-public class VfdtProcessFunctionN extends BaseProcessFunction<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> {
-    public VfdtProcessFunctionN(ClassifierSupplier<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> createClassifierFunction) {
-        super(createClassifierFunction);
+public abstract class VfdtProcessFunctionN extends BaseProcessFunction<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> {
+    public VfdtProcessFunctionN() {
+        super();
     }
 
     @Override

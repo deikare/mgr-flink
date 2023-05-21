@@ -2,8 +2,6 @@ package vfdt;
 
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
-import org.apache.flink.api.common.typeinfo.TypeHint;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.ConfigOption;
@@ -17,29 +15,21 @@ import vfdt.hoeffding.Example;
 
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.UUID;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
+public abstract class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
     protected transient ValueState<C> classifierState;
-    protected final ClassifierSupplier<C> createClassifierFunction; //todo i must make this class serializable
     protected transient ValueState<String> nameState;
     protected transient ValueState<String> experimentIdState;
     protected transient ValueState<String> datasetState;
 
-
-    public BaseProcessFunction(ClassifierSupplier<C> createClassifierFunction) {
-        this.createClassifierFunction = createClassifierFunction;
-    }
+    protected abstract C getClassifier();
 
     @Override
     public void processElement(Example example, KeyedProcessFunction<Long, Example, String>.Context context, Collector<String> collector) throws Exception {
         C classifier = classifierState.value();
         if (classifier == null)
-            classifier = createClassifierFunction.get();
-
+            classifier = getClassifier();
 
         Tuple2<Long, HashMap<String, Long>> trainingResult = classifier.train(example);
         Tuple2<String, HashMap<String, Long>> classifyResult = classifier.classify(example, trainingResult.f1);
@@ -88,7 +78,7 @@ public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessF
                     .noDefaultValue();
             nameState.update(parameters.getString(nameConfig));
         }*/
-//        nameState = initializeState(BaseClassifierTags.CLASSIFIER_NAME, parameters);
+        nameState = initializeState(BaseClassifierTags.CLASSIFIER_NAME, parameters);
         /*ValueStateDescriptor<String> experimentIdDescriptor = new ValueStateDescriptor<>(BaseClassifierTags.EXPERIMENT_ID, Types.STRING);
         experimentIdState = getRuntimeContext().getState(experimentIdDescriptor);
         if (experimentIdState.value() == null)
@@ -104,7 +94,7 @@ public class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessF
                     .noDefaultValue();
             datasetState.update(parameters.getString(datasetConfig));
         }*/
-//        datasetState = initializeState(BaseClassifierTags.DATASET, parameters);
+        datasetState = initializeState(BaseClassifierTags.DATASET, parameters);
 
     }
 

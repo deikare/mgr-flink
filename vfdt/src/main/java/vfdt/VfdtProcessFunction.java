@@ -4,11 +4,7 @@ import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.api.java.tuple.Tuple4;
-import org.apache.flink.api.java.tuple.Tuple5;
-import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.api.java.utils.ParameterTool;
-import org.apache.flink.configuration.ConfigOption;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
@@ -51,14 +47,14 @@ public class VfdtProcessFunction extends KeyedProcessFunction<Long, Example, Str
         long batchStatLength = params.getLong("batchStatLength", 500);
         HashSet<String> attributes = new HashSet<>(Arrays.asList(params.get("attributes").split(",")));
 
-        SerializableHeuristic<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> heuristic = (s, node) -> {
-            double threshold = 0.5;
-            return Math.abs(threshold - node.getStatistics().getSplittingValue(s)) / threshold;
-        };
-
         SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
 
-        return new HoeffdingTree<>(classesNumber, delta, attributes, tau, nMin, statisticsBuilder, heuristic, batchStatLength);
+        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesNumber, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
+            @Override
+            protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                return 0;
+            }
+        };
     }
 
     @Override
