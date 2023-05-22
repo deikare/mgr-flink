@@ -1,6 +1,5 @@
 package vfdt.hoeffding;
 
-import com.google.gson.Gson;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +104,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     }
 
     protected Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
-        Instant start = Instant.now();
         Node<N_S, B> leaf = getLeaf(example);
         String predictedClass = leaf.getMajorityClass();
         logger.info(example + " predicted with " + predictedClass);
@@ -119,8 +117,8 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 
     protected HashMap<String, Long> trainImplementation(Example example) throws RuntimeException {
         n++;
-        Tuple2<Node<N_S, B>, HashMap<String, Long>> leafWithPerformance = getLeafWithPerformance(example);
-        Node<N_S, B> leaf = leafWithPerformance.f0;
+        HashMap<String, Long> trainingPerformances = new HashMap<>();
+        Node<N_S, B> leaf = getLeaf(example, trainingPerformances);
         logger.info("Training: " + example.toString());
 
         leaf.updateStatistics(example);
@@ -148,10 +146,10 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 
         logger.info(leaf.getStatistics().toString());
 
-        return leafWithPerformance.f1;
+        return trainingPerformances;
     }
 
-    private Tuple2<Node<N_S, B>, HashMap<String, Long>> getLeafWithPerformance(Example example) {
+    private Node<N_S, B> getLeaf(Example example, HashMap<String, Long> performances) {
         Instant start = Instant.now();
         long count = 1;
         Node<N_S, B> result = root;
@@ -159,10 +157,9 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
             count++;
             result = result.getChild(example);
         }
-        HashMap<String, Long> performanceResults = new HashMap<>();
-        performanceResults.put(HoeffdingTreeFields.NODES_DURING_TRAVERSAL_COUNT, count);
-        performanceResults.put(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, toNow(start));
-        return new Tuple2<>(result, performanceResults);
+        performances.put(HoeffdingTreeFields.NODES_DURING_TRAVERSAL_COUNT, count);
+        performances.put(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, toNow(start));
+        return result;
     }
 
     private Node<N_S, B> getLeaf(Example example) {
@@ -287,4 +284,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 //            throw new RuntimeException(e);
 //        }
     }
+
+
 }

@@ -9,8 +9,10 @@ import vfdt.hoeffding.SimpleNodeStatistics;
 import vfdt.hoeffding.SimpleNodeStatisticsBuilder;
 
 public abstract class VfdtProcessFunctionN extends BaseProcessFunction<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> {
-    public VfdtProcessFunctionN() {
-        super();
+
+
+    public VfdtProcessFunctionN(String name, String dataset) {
+        super(name, dataset);
     }
 
     @Override

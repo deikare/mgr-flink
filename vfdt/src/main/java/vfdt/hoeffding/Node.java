@@ -1,13 +1,54 @@
 package vfdt.hoeffding;
 
-public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> {
+import java.io.Serializable;
+
+public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> implements Serializable {
     private Node<N_S, B> leftChild;
     private Node<N_S, B> rightChild;
 
     private double splittingValue;
     private String splittingAttribute;
 
-    private final N_S statistics;
+    private N_S statistics;
+
+    public Node() {
+    }
+
+    public Node<N_S, B> getLeftChild() {
+        return leftChild;
+    }
+
+    public void setLeftChild(Node<N_S, B> leftChild) {
+        this.leftChild = leftChild;
+    }
+
+    public Node<N_S, B> getRightChild() {
+        return rightChild;
+    }
+
+    public void setRightChild(Node<N_S, B> rightChild) {
+        this.rightChild = rightChild;
+    }
+
+    public double getSplittingValue() {
+        return splittingValue;
+    }
+
+    public void setSplittingValue(double splittingValue) {
+        this.splittingValue = splittingValue;
+    }
+
+    public String getSplittingAttribute() {
+        return splittingAttribute;
+    }
+
+    public void setSplittingAttribute(String splittingAttribute) {
+        this.splittingAttribute = splittingAttribute;
+    }
+
+    public void setStatistics(N_S statistics) {
+        this.statistics = statistics;
+    }
 
     public Node(B statisticsBuilder) {
         this.statistics = statisticsBuilder.build();

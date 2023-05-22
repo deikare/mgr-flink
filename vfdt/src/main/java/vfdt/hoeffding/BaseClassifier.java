@@ -2,11 +2,12 @@ package vfdt.hoeffding;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 
-public abstract class BaseClassifier {
+public abstract class BaseClassifier implements Serializable {
     public Tuple2<Long, HashMap<String, Long>> train(Example example) {
         Instant start = Instant.now();
         HashMap<String, Long> trainingPerformance = trainImplementation(example);
