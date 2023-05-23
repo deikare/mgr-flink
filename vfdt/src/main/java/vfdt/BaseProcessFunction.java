@@ -16,22 +16,22 @@ import java.util.stream.Collectors;
 
 public abstract class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
     protected transient ValueState<C> classifierState;
-    protected String name;
-    protected String experimentId = UUID.randomUUID().toString();
-    protected String dataset;
+//    protected String name;
+//    protected String experimentId = UUID.randomUUID().toString();
+//    protected String dataset;
 
     public BaseProcessFunction(String name, String dataset) {
-        this.name = name;
-        this.dataset = dataset;
+//        this.name = name;
+//        this.dataset = dataset;
     }
 
-    protected abstract C getClassifier();
+    protected abstract C createClassifier();
 
     @Override
     public void processElement(Example example, KeyedProcessFunction<Long, Example, String>.Context context, Collector<String> collector) throws Exception {
         C classifier = classifierState.value();
         if (classifier == null)
-            classifier = getClassifier();
+            classifier = createClassifier();
 
         Tuple2<Long, HashMap<String, Long>> trainingResult = classifier.train(example);
         Tuple2<String, HashMap<String, Long>> classifyResult = classifier.classify(example, trainingResult.f1);
@@ -43,10 +43,11 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
     }
 
     private String produceMessage(Long timestamp, Tuple2<String, HashMap<String, Long>> classifyResult, String exampleClass) throws IOException {
-        String result = name;
+//        String result = name;
+        String result = "dummy";
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifierState.value().generateClassifierParams());
-        result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
-        result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
+//        result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
+//        result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
         result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
         result += "," + produceTag(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";
 
@@ -62,7 +63,9 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
 
     @Override
     public void open(Configuration parameters) throws Exception {
-        super.open(parameters);
+        registerClassifier();
     }
+
+    protected abstract void registerClassifier();
 
 }

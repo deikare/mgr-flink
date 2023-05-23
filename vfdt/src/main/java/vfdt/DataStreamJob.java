@@ -27,6 +27,7 @@ import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.hoeffding.*;
+import vfdt.hoeffding.testclassifiers.DummyHoeffdingProcessFunction;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -127,17 +128,22 @@ public class DataStreamJob {
                 )
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
-
+//
 //        DataStream<String> stream = env.fromCollection(data.f0)
 //                .keyBy(Example::getId)
 //                .process(new DummyProcessFunction("dummy", dataset));
 
 
+/*        DataStream<String> stream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new DummyHoeffdingProcessFunction())
+                .name("dummy-hoeffding-tree");*/
+
         DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
                 .process(new VfdtProcessFunctionN("vfdt", dataset) {
                     @Override
-                    protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> getClassifier() {
+                    protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50;
@@ -154,8 +160,14 @@ public class DataStreamJob {
                             }
                         };
                     }
+
+                    @Override
+                    protected void registerClassifier() {
+
+                    }
                 })
                 .name("process-examples");
+
 //        DataStream<String> stream = env.fromCollection(data.f0)
 //                .keyBy(Example::getId)
 //                .process(new VfdtProcessTest())

@@ -11,14 +11,12 @@ public class DummyProcessFunction extends BaseProcessFunction<DummyClassifier> {
     }
 
     @Override
-    protected DummyClassifier getClassifier() {
+    protected DummyClassifier createClassifier() {
         return new DummyClassifier();
     }
 
     @Override
-    public void open(Configuration parameters) throws Exception {
-        super.open(parameters);
-
+    protected void registerClassifier() {
         TypeInformation<DummyClassifier> typeInformation = TypeInformation.of(new TypeHint<DummyClassifier>() {
         });
         classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", typeInformation));
