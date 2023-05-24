@@ -6,6 +6,7 @@ import vfdt.inputs.Example;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 
 public abstract class BaseClassifier implements Serializable {
@@ -32,5 +33,6 @@ public abstract class BaseClassifier implements Serializable {
 
     protected long toNow(Instant start) {
         return Duration.between(start, Instant.now()).toNanos();
+//        return ChronoUnit.NANOS.between(start, Instant.now());
     }
 }
