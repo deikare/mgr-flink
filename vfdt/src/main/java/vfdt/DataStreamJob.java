@@ -32,7 +32,6 @@ import vfdt.classifiers.hoeffding.Node;
 import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
 import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
 import vfdt.inputs.Example;
-import vfdt.processors.dummies.HoeffdingOverBaseDummyClassifier;
 import vfdt.processors.hoeffding.VfdtProcessFunctionN;
 import vfdt.sinks.LoggingSink;
 

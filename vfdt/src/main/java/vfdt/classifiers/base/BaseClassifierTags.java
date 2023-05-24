@@ -1,6 +1,9 @@
 package vfdt.classifiers.base;
 
 public class BaseClassifierTags {
+    private BaseClassifierTags() {
+    }
+
     public final static String CLASSIFIER_NAME = "name";
     public final static String CLASSIFIER_PARAMS = "params";
     public final static String EXPERIMENT_ID = "experiment_id";

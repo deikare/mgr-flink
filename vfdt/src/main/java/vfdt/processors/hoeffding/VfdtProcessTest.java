@@ -24,8 +24,6 @@ public class VfdtProcessTest extends KeyedProcessFunction<Long, Example, String>
 
     @Override
     public void open(Configuration parameters) throws Exception {
-//        super.open(parameters);
-
         System.out.println(counter);
 
         counter = getRuntimeContext().getState(new ValueStateDescriptor<>("counter", Types.LONG));

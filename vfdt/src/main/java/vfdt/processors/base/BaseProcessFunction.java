@@ -25,8 +25,6 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         this.dataset = dataset;
     }
 
-    protected abstract C createClassifier();
-
     @Override
     public void processElement(Example example, KeyedProcessFunction<Long, Example, String>.Context context, Collector<String> collector) throws Exception {
         C classifier = classifierState.value();
@@ -41,6 +39,8 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
 
         collector.collect(msg);
     }
+
+    protected abstract C createClassifier();
 
     private String produceMessage(Long timestamp, Tuple2<String, HashMap<String, Long>> classifyResult, String exampleClass) throws IOException {
         String result = name;
@@ -65,5 +65,5 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         registerClassifier();
     }
 
-    protected abstract void registerClassifier();
+    protected abstract void registerClassifier(); //its abstract because TypeInfo cannot be templated
 }
