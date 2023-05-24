@@ -1,6 +1,7 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.base;
 
 import org.apache.flink.api.java.tuple.Tuple2;
+import vfdt.inputs.Example;
 
 import java.io.Serializable;
 import java.time.Duration;
@@ -30,6 +31,6 @@ public abstract class BaseClassifier implements Serializable {
     public abstract String generateClassifierParams();
 
     protected long toNow(Instant start) {
-        return Duration.between(start, Instant.now()).toMillis();
+        return Duration.between(start, Instant.now()).toNanos();
     }
 }

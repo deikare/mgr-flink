@@ -1,14 +1,12 @@
-package vfdt;
+package vfdt.processors.hoeffding;
 
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
-import org.apache.flink.api.common.typeinfo.TypeHint;
-import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.common.typeinfo.Types;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
-import vfdt.hoeffding.Example;
+import vfdt.inputs.Example;
 
 public class VfdtProcessTest extends KeyedProcessFunction<Long, Example, String> {
     ValueState<Long> counter;

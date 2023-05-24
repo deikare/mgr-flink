@@ -1,4 +1,4 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.hoeffding;
 
 public class TreeTotalStatistics extends BasicTreeStatistics {
     private long heuristicSplitsCount;

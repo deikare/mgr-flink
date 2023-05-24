@@ -1,4 +1,6 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.hoeffding;
+
+import vfdt.inputs.Example;
 
 import java.util.Collections;
 import java.util.HashMap;

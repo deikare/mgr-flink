@@ -26,8 +26,15 @@ import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
 import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
-import vfdt.hoeffding.*;
-import vfdt.hoeffding.testclassifiers.DummyHoeffdingProcessFunction;
+import vfdt.classifiers.base.BaseClassifierTags;
+import vfdt.classifiers.hoeffding.HoeffdingTree;
+import vfdt.classifiers.hoeffding.Node;
+import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
+import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
+import vfdt.inputs.Example;
+import vfdt.processors.dummies.HoeffdingOverBaseDummyClassifier;
+import vfdt.processors.hoeffding.VfdtProcessFunctionN;
+import vfdt.sinks.LoggingSink;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -103,20 +110,16 @@ public class DataStreamJob {
         final String filepath = "/home/deikare/wut/streaming-datasets/" + dataset + ".csv";
 
         Tuple2<LinkedList<Example>, HashSet<String>> data = readExamples(filepath);
+        HashSet<String> attributes = data.f1; //protects from TupleSerialization error!
 
-//        double delta = 0.05; //TODO - add dto with consts and default values
-//        double tau = 0.2;
-//        long nMin = 50;
-//        long batchStatLength = 500;
-//        long classesAmount = 2;
-//        ParameterTool params = getVFDTOptions(classesAmount, delta, data.f1, tau, nMin, batchStatLength);
         HashMap<String, String> options = new HashMap<>();
 
         options.put(BaseClassifierTags.CLASSIFIER_NAME, "vfdt");
         options.put(BaseClassifierTags.DATASET, dataset);
 
         env.getConfig().setGlobalJobParameters(ParameterTool.fromMap(options));
-//        env.getConfig().enableForceKryo();
+//        env.getConfig().disableGenericTypes();
+        env.getConfig().enableForceKryo();
 
 
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
@@ -128,45 +131,34 @@ public class DataStreamJob {
                 )
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
-//
-//        DataStream<String> stream = env.fromCollection(data.f0)
-//                .keyBy(Example::getId)
-//                .process(new DummyProcessFunction("dummy", dataset));
-
 
         DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new DummyHoeffdingProcessFunction())
-                .name("dummy-hoeffding-tree");
+                .process(new VfdtProcessFunctionN("vfdt", dataset) {
+                    @Override
+                    protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
+                        double delta = 0.05;
+                        double tau = 0.2;
+                        long nMin = 50;
+                        long batchStatLength = 500;
+                        long classesAmount = 2;
 
-//        DataStream<String> stream = env.fromCollection(data.f0)
-//                .keyBy(Example::getId)
-//                .process(new VfdtProcessFunctionN("vfdt", dataset) {
-//                    @Override
-//                    protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
-//                        double delta = 0.05;
-//                        double tau = 0.2;
-//                        long nMin = 50;
-//                        long batchStatLength = 500;
-//                        long classesAmount = 2;
-//                        HashSet<String> attributes = data.f1;
-//
-//                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-//                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
-//                            @Override
-//                            protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
-//                                double threshold = 0.5;
-//                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attribute)) / threshold;
-//                            }
-//                        };
-//                    }
-//                })
-//                .name("process-examples");
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
+                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
+                            @Override
+                            protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                                double threshold = 0.5;
+                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attribute)) / threshold;
+                            }
+                        };
+                    }
+                })
+                .name("process-examples");
 
-//        DataStream<String> stream = env.fromCollection(data.f0)
-//                .keyBy(Example::getId)
-//                .process(new VfdtProcessTest())
-//                .name("process-examples");
+/*        DataStream<String> stream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new VfdtProcessTest())
+                .name("process-examples");*/
 
         stream.addSink(new LoggingSink()).name("logging-sink");
         stream.sinkTo(kafkaSink).name("kafka-sink");

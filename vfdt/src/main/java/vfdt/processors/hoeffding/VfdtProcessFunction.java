@@ -1,4 +1,4 @@
-package vfdt;
+package vfdt.processors.hoeffding;
 
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.common.state.ValueStateDescriptor;
@@ -8,7 +8,8 @@ import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
-import vfdt.hoeffding.*;
+import vfdt.classifiers.hoeffding.*;
+import vfdt.inputs.Example;
 
 import java.util.Arrays;
 import java.util.HashSet;

@@ -1,6 +1,5 @@
-package vfdt;
+package vfdt.sinks;
 
-import org.apache.flink.api.java.tuple.Tuple8;
 import org.apache.flink.streaming.api.functions.sink.SinkFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

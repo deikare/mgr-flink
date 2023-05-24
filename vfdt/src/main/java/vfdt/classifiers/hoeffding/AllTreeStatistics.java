@@ -1,4 +1,4 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.hoeffding;
 
 import java.util.LinkedList;
 import java.util.stream.Collectors;

@@ -1,13 +1,14 @@
-package vfdt;
+package vfdt.processors.dummies;
 
 import org.apache.flink.api.common.state.ValueStateDescriptor;
 import org.apache.flink.api.common.typeinfo.TypeHint;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
-import org.apache.flink.configuration.Configuration;
+import vfdt.processors.base.BaseProcessFunction;
+import vfdt.classifiers.dummies.DummyClassifier;
 
 public class DummyProcessFunction extends BaseProcessFunction<DummyClassifier> {
-    public DummyProcessFunction(String name, String dataset) {
-        super(name, dataset);
+    public DummyProcessFunction() {
+        super("", "");
     }
 
     @Override

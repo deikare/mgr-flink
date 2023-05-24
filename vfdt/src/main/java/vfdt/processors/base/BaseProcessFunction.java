@@ -1,13 +1,13 @@
-package vfdt;
+package vfdt.processors.base;
 
 import org.apache.flink.api.common.state.ValueState;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
 import org.apache.flink.util.Collector;
-import vfdt.hoeffding.BaseClassifier;
-import vfdt.hoeffding.BaseClassifierTags;
-import vfdt.hoeffding.Example;
+import vfdt.classifiers.base.BaseClassifier;
+import vfdt.classifiers.base.BaseClassifierTags;
+import vfdt.inputs.Example;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -16,13 +16,13 @@ import java.util.stream.Collectors;
 
 public abstract class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
     protected transient ValueState<C> classifierState;
-//    protected String name;
-//    protected String experimentId = UUID.randomUUID().toString();
-//    protected String dataset;
+    protected String name;
+    protected String experimentId = UUID.randomUUID().toString();
+    protected String dataset;
 
     public BaseProcessFunction(String name, String dataset) {
-//        this.name = name;
-//        this.dataset = dataset;
+        this.name = name;
+        this.dataset = dataset;
     }
 
     protected abstract C createClassifier();
@@ -43,11 +43,10 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
     }
 
     private String produceMessage(Long timestamp, Tuple2<String, HashMap<String, Long>> classifyResult, String exampleClass) throws IOException {
-//        String result = name;
-        String result = "dummy";
+        String result = name;
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifierState.value().generateClassifierParams());
-//        result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
-//        result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
+        result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
+        result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
         result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
         result += "," + produceTag(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";
 
@@ -67,5 +66,4 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
     }
 
     protected abstract void registerClassifier();
-
 }

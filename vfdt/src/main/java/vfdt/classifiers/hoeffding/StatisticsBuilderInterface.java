@@ -1,4 +1,4 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.hoeffding;
 
 import java.io.Serializable;
 

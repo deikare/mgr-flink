@@ -1,4 +1,6 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.hoeffding;
+
+import vfdt.classifiers.base.BaseClassifierFields;
 
 public class HoeffdingTreeFields extends BaseClassifierFields {
     public static final String NODES_DURING_TRAVERSAL_COUNT = "nodes_during_traversal_count";

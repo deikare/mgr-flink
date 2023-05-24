@@ -1,4 +1,4 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.base;
 
 public class BaseClassifierTags {
     public final static String CLASSIFIER_NAME = "name";

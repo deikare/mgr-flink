@@ -1,4 +1,4 @@
-package vfdt.hoeffding;
+package vfdt.inputs;
 
 import java.util.HashMap;
 
@@ -20,6 +20,14 @@ public class Example {
 
     public HashMap<String, Double> getAttributes() {
         return attributes;
+    }
+
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    public void setAttributes(HashMap<String, Double> attributes) {
+        this.attributes = attributes;
     }
 
     @Override

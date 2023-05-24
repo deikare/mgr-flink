@@ -1,8 +1,10 @@
-package vfdt.hoeffding;
+package vfdt.classifiers.hoeffding;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import vfdt.classifiers.base.BaseClassifier;
+import vfdt.inputs.Example;
 
 import java.io.File;
 import java.io.FileNotFoundException;
