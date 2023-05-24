@@ -15,14 +15,21 @@ public abstract class VfdtProcessFunctionN extends BaseProcessFunction<Hoeffding
         super(name, dataset);
     }
 
-    @Override
-    public void open(Configuration parameters) throws Exception {
-        super.open(parameters);
+//    @Override
+//    public void open(Configuration parameters) throws Exception {
+//        super.open(parameters);
+//
+//        TypeInformation<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> classifierInfo = TypeInformation.of(new TypeHint<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>>() { //todo exception here - try to put this line as lambda in main
+//        });
+//        classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", classifierInfo));
+////        if (classifierState.value() == null)
+////            classifierState.update(createClassifierFunction.get());
+//    }
 
+    @Override
+    protected void registerClassifier() {
         TypeInformation<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> classifierInfo = TypeInformation.of(new TypeHint<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>>() { //todo exception here - try to put this line as lambda in main
         });
         classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", classifierInfo));
-//        if (classifierState.value() == null)
-//            classifierState.update(createClassifierFunction.get());
     }
 }
