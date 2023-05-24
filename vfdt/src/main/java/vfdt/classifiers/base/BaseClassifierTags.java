@@ -1,7 +1,7 @@
 package vfdt.classifiers.base;
 
 public class BaseClassifierTags {
-    private BaseClassifierTags() {
+    protected BaseClassifierTags() {
     }
 
     public final static String CLASSIFIER_NAME = "name";
