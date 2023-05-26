@@ -31,20 +31,20 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         if (classifier == null)
             classifier = createClassifier();
 
-        Tuple2<Long, HashMap<String, Long>> trainingResult = classifier.train(example);
+        Tuple2<String, HashMap<String, Long>> trainingResult = classifier.train(example);
         Tuple2<String, HashMap<String, Long>> classifyResult = classifier.classify(example, trainingResult.f1);
         classifierState.update(classifier);
 
-        String msg = produceMessage(trainingResult.f0, classifyResult, example.getClassName());
+        String msg = produceMessage(classifier, trainingResult.f0, classifyResult, example.getClassName());
 
         collector.collect(msg);
     }
 
     protected abstract C createClassifier();
 
-    private String produceMessage(Long timestamp, Tuple2<String, HashMap<String, Long>> classifyResult, String exampleClass) throws IOException {
+    private String produceMessage(C classifier, String timestamp, Tuple2<String, HashMap<String, Long>> classifyResult, String exampleClass) throws IOException {
         String result = name;
-        result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifierState.value().generateClassifierParams());
+        result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifier.generateClassifierParams());
         result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
         result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
         result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
