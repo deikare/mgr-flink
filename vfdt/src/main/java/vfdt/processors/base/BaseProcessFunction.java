@@ -43,14 +43,16 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
     protected abstract C createClassifier();
 
     private String produceMessage(C classifier, String timestamp, Tuple2<String, HashMap<String, Long>> classifyResult, String exampleClass) throws IOException {
-        String result = name;
+        String result = "classifierResult";
+        result += "," + produceTag(BaseClassifierTags.CLASSIFIER_NAME, name);
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifier.generateClassifierParams());
         result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
-        result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
-        result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
-        result += "," + produceTag(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";
+        result += "," + produceTag(BaseClassifierTags.DATASET, dataset) + " ";
 
-        result += classifyResult.f1.entrySet().stream().map(entry -> produceTag(entry.getKey(), entry.getValue())).collect(Collectors.joining(",")) + " ";
+        result += classifyResult.f1.entrySet().stream().map(entry -> produceFieldAsNumber(entry.getKey(), entry.getValue(), "i")).collect(Collectors.joining(","));
+        result += "," + produceFieldAsString(BaseClassifierTags.CLASS, exampleClass);
+        result += "," + produceFieldAsString(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";
+
         result += timestamp;
 
         return result;
@@ -58,6 +60,14 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
 
     private <T> String produceTag(String key, T value) {
         return key + "=" + value;
+    }
+
+    private <T> String produceFieldAsString(String key, T value) {
+        return key + "=\"" + value + "\"";
+    }
+
+    private <T> String produceFieldAsNumber(String key, T value, String unit) {
+        return key + "=" + value + unit;
     }
 
     @Override
