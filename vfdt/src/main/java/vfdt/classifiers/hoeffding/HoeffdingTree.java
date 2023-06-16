@@ -102,7 +102,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         this.statisticsBuilder = statisticsBuilder;
         this.root = new Node<>(statisticsBuilder);
         this.batchStatLength = batchStatLength;
-//        treeStatistics = new AllTreeStatistics(batchStatLength);
     }
 
     protected Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
