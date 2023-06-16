@@ -7,6 +7,7 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+    restart: on-failure:10
 
   kafka:
     image: confluentinc/cp-kafka:7.3.0
@@ -25,6 +26,8 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    restart: on-failure:10
+
 
   kafdrop:
     image: obsidiandynamics/kafdrop:4.0.0-SNAPSHOT
@@ -35,14 +38,14 @@ services:
     environment:
       KAFKA_BROKERCONNECT: "kafka:29092"
 
-  grafana:
-    image: grafana/grafana:8.5.22-ubuntu
-    depends_on:
-      - kafka
-    ports:
-      - "3000:3000"
-    environment:
-      GF_INSTALL_PLUGINS: "hamedkarbasi93-kafka-datasource"
+  #  grafana:
+  #    image: grafana/grafana:8.5.22-ubuntu
+  #    depends_on:
+  #      - kafka
+  #    ports:
+  #      - "3000:3000"
+  #    environment:
+  #      GF_INSTALL_PLUGINS: "hamedkarbasi93-kafka-datasource"
 
   influxdb:
     image: influxdb:2.7.0
