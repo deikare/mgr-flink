@@ -32,7 +32,7 @@ import vfdt.classifiers.hoeffding.Node;
 import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
 import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
 import vfdt.inputs.Example;
-import vfdt.processors.hoeffding.VfdtProcessFunctionN;
+import vfdt.processors.hoeffding.VfdtProcessFunction;
 import vfdt.sinks.LoggingSink;
 
 import java.io.File;
@@ -118,7 +118,7 @@ public class DataStreamJob {
 
         env.getConfig().setGlobalJobParameters(ParameterTool.fromMap(options));
 //        env.getConfig().disableGenericTypes();
-        env.getConfig().enableForceKryo();
+//        env.getConfig().enableForceKryo();
 
 
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
@@ -133,7 +133,7 @@ public class DataStreamJob {
 
         DataStream<String> stream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new VfdtProcessFunctionN("vfdt", dataset) {
+                .process(new VfdtProcessFunction("vfdt", dataset) {
                     @Override
                     protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
                         double delta = 0.05;
@@ -154,16 +154,8 @@ public class DataStreamJob {
                 })
                 .name("process-examples");
 
-/*        DataStream<String> stream = env.fromCollection(data.f0)
-                .keyBy(Example::getId)
-                .process(new VfdtProcessTest())
-                .name("process-examples");*/
-
         stream.addSink(new LoggingSink()).name("logging-sink");
         stream.sinkTo(kafkaSink).name("kafka-sink");
-
-//        stream.print("std-out-sink");
-
 
 
         /*
