@@ -8,7 +8,10 @@ HOST="http://influxdb:8086"
 
 CONFIG_PATH="/etc/influxdb/configs"
 
-influx setup --bucket data --host=$HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f -r 4h
+#influx setup --bucket data --host=$HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f -r 4h
+
+influx setup --bucket data --host=$HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f
+
 
 #influx bucket create --host=$HOST -t $TOKEN -o $ORG -n data-downsampled -r 24h
 #

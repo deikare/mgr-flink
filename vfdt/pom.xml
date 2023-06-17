@@ -143,6 +143,11 @@ under the License.
                 <configuration>
                     <source>${target.java.version}</source>
                     <target>${target.java.version}</target>
+                    <!--                    <compilerArgs>-->
+                    <!--                        <arg>&#45;&#45;add-opens</arg>-->
+                    <!--                        <arg>java.base/java.util=ALL-UNNAMED</arg>-->
+                    <!--                    </compilerArgs>-->
+
                 </configuration>
             </plugin>
 
