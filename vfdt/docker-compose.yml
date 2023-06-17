@@ -9,6 +9,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
     restart: on-failure:10
 
+
   kafka:
     image: confluentinc/cp-kafka:7.3.0
     container_name: kafka
@@ -46,6 +47,7 @@ services:
   #      - "3000:3000"
   #    environment:
   #      GF_INSTALL_PLUGINS: "hamedkarbasi93-kafka-datasource"
+
 
   influxdb:
     image: influxdb:2.7.0

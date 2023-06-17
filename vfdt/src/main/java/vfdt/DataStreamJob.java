@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.*;
 
+
 /**
  * Skeleton for a Flink DataStream Job.
  *
@@ -53,6 +54,7 @@ import java.util.*;
  */
 public class DataStreamJob {
     public static Tuple2<LinkedList<Example>, HashSet<String>> readExamples(String filepath) throws FileNotFoundException {
+
         LinkedList<String> attributes = new LinkedList<>();
         LinkedList<Example> examples = new LinkedList<>();
 
@@ -121,10 +123,12 @@ public class DataStreamJob {
 //        env.getConfig().enableForceKryo();
 
 
+
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
                 .setBootstrapServers("localhost:9092")
                 .setRecordSerializer(KafkaRecordSerializationSchema.builder()
                         .setTopic("classifier-performances")
+
                         .setValueSerializationSchema(new SimpleStringSchema())
                         .build()
                 )
@@ -153,9 +157,9 @@ public class DataStreamJob {
                 })
                 .name("process-examples");
 
+
         stream.addSink(new LoggingSink()).name("logging-sink");
         stream.sinkTo(kafkaSink).name("kafka-sink");
-
 
         /*
          * Here, you can start creating your execution plan for Flink.
