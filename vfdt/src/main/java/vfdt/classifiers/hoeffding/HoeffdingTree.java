@@ -8,10 +8,6 @@ import vfdt.inputs.Example;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -80,7 +76,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
     private final long nMin;
 
-    private final long batchStatLength;
     private final int R;
     private final double delta;
     private final HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
@@ -93,7 +88,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     private long n = 0L;
 
 
-    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder, long batchStatLength) {
+    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder) {
         this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
         this.attributes = attributes;
@@ -101,7 +96,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         this.nMin = nMin;
         this.statisticsBuilder = statisticsBuilder;
         this.root = new Node<>(statisticsBuilder);
-        this.batchStatLength = batchStatLength;
     }
 
     protected Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
@@ -213,20 +207,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 //        return treeStatistics.toStringSimple();
 //    }
 
-    public void printStatisticsToFile(String dataPath) throws FileNotFoundException, UnsupportedEncodingException {
-//stat_data_r._d._t._n._b
-        Path path = Paths.get(dataPath);
-        String dataFileName = path.getFileName().toString();
-        String dataFileNameNoExtension = dataFileName.substring(0, dataFileName.lastIndexOf('.'));
-        String statFileName = "stat_" + dataFileNameNoExtension + "_r" + R + "_d" + delta + "_t" + tau + "_n" + nMin + "_b" + batchStatLength + ".txt";
-        String statFilePath = System.getenv("MGR_FLINK_RESULTS_PATH") + "/" + statFileName;
-        PrintWriter writer = new PrintWriter(statFilePath, "UTF-8");
-//        writer.write(new Gson().toJson(treeStatistics));
-        writer.close();
-
-        System.out.println("Printing STAT to file: " + statFileName);
-    }
-
     public static void main(String[] args) {
         String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
         HashSet<String> attributes = new HashSet<>();
@@ -250,7 +230,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
             long classesAmount = 2;
 
 
-            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
+            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder) {
                 @Override
                 protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                     return 0;

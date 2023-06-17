@@ -139,11 +139,10 @@ public class DataStreamJob {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50;
-                        long batchStatLength = 500;
                         long classesAmount = 2;
 
                         SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder, batchStatLength) {
+                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder) {
                             @Override
                             protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                                 double threshold = 0.5;
