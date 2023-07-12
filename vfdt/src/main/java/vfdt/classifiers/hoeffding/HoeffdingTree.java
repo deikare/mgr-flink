@@ -82,9 +82,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     private final double tau;
     private final Node<N_S, B> root;
     private final B statisticsBuilder;
-
-//    private final AllTreeStatistics treeStatistics;
-
     private long n = 0L;
 
 
@@ -130,12 +127,10 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
                 throw new RuntimeException(msg);
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
-//                treeStatistics.updateOnNodeSplit(false);
                 leaf.split(pojo.attribute, statisticsBuilder, example);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
                 leaf.split(pojo.attribute, statisticsBuilder, example);
-//                treeStatistics.updateOnNodeSplit(true);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
 
@@ -198,14 +193,6 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     }
 
     protected abstract double heuristic(String attribute, Node<N_S, B> node);
-
-//    public String printStatistics() {
-//        return treeStatistics.totalStatisticsToString();
-//    }
-//
-//    public String getSimpleStatistics() {
-//        return treeStatistics.toStringSimple();
-//    }
 
     public static void main(String[] args) {
         String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
