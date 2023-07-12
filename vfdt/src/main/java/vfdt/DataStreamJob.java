@@ -119,9 +119,6 @@ public class DataStreamJob {
         options.put(BaseClassifierTags.DATASET, dataset);
 
         env.getConfig().setGlobalJobParameters(ParameterTool.fromMap(options));
-//        env.getConfig().disableGenericTypes();
-//        env.getConfig().enableForceKryo();
-
 
 
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
