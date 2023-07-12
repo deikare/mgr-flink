@@ -47,11 +47,11 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_NAME, name);
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifier.generateClassifierParams());
         result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
-        result += "," + produceTag(BaseClassifierTags.DATASET, dataset) + " ";
+        result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
+        result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
+        result += "," + produceTag(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";
 
-        result += classifyResult.f1.entrySet().stream().map(entry -> produceFieldAsNumber(entry.getKey(), entry.getValue(), "i")).collect(Collectors.joining(","));
-        result += "," + produceFieldAsString(BaseClassifierTags.CLASS, exampleClass);
-        result += "," + produceFieldAsString(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";
+        result += classifyResult.f1.entrySet().stream().map(entry -> produceFieldAsNumber(entry.getKey(), entry.getValue(), "i")).collect(Collectors.joining(",")) + " ";
 
         result += timestamp;
 
