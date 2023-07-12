@@ -33,6 +33,5 @@ public abstract class BaseClassifier implements Serializable {
 
     protected long toNow(Instant start) {
         return Duration.between(start, Instant.now()).toNanos();
-//        return ChronoUnit.NANOS.between(start, Instant.now());
     }
 }
