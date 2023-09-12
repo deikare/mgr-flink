@@ -1,8 +1,8 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Run Flink cluster" type="ShConfigurationType">
+  <configuration default="false" name="Deploy Flink App" type="ShConfigurationType">
     <option name="SCRIPT_TEXT" value="" />
     <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
-    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/start-flink-cluster.sh" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/start-flink-cluster-and-deploy-app.sh" />
     <option name="SCRIPT_OPTIONS" value="" />
     <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
     <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
@@ -14,6 +14,7 @@
     <envs>
       <env name="FLINK_ADDRESS" value="localhost:8081" />
       <env name="FLINK_BIN_PATH" value="$USER_HOME$/bin/flink-1.16.0/bin" />
+      <env name="JAR_FILE" value="$PROJECT_DIR$/target/vfdt-1.0-SNAPSHOT.jar" />
     </envs>
     <method v="2" />
   </configuration>

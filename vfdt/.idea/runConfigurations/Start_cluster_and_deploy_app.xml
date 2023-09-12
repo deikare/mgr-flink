@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Start cluster and deploy app" type="CompoundRunConfigurationType">
+    <toRun name="vfdt [clean,package]" type="MavenRunConfiguration" />
+    <toRun name="Deploy Flink App" type="ShConfigurationType" />
+    <method v="2" />
+  </configuration>
+</component>
