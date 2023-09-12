@@ -16,6 +16,8 @@
       <env name="FLINK_BIN_PATH" value="$USER_HOME$/bin/flink-1.16.0/bin" />
       <env name="JAR_FILE" value="$PROJECT_DIR$/target/vfdt-1.0-SNAPSHOT.jar" />
     </envs>
-    <method v="2" />
+    <method v="2">
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/pom.xml" goal="clean package" />
+    </method>
   </configuration>
 </component>
