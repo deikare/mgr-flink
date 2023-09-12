@@ -12,7 +12,6 @@ CONFIG_PATH="/etc/influxdb/configs"
 
 influx setup --bucket data --host=$HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f
 
-
 #influx bucket create --host=$HOST -t $TOKEN -o $ORG -n data-downsampled -r 24h
 #
 #influx bucket create --host=$HOST -t $TOKEN -o $ORG -n data-downsampled2
