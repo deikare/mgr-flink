@@ -14,7 +14,7 @@ public abstract class BaseClassifier implements Serializable {
         Instant start = Instant.now();
         HashMap<String, Long> trainingPerformance = trainImplementation(example);
         trainingPerformance.put(BaseClassifierFields.TRAINING_DURATION, toNow(start));
-        return new Tuple2<>(String.valueOf(start.getEpochSecond()) + start.getNano(), trainingPerformance);
+        return new Tuple2<>(start.getEpochSecond() + String.format("%09d", start.getNano()), trainingPerformance);
     }
 
     public Tuple2<String, HashMap<String, Long>> classify(Example example, HashMap<String, Long> performances) {
