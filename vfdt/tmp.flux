@@ -46,5 +46,15 @@ from(bucket: "data")
     |> group(columns: ["experimentId"])
     |> cumulativeSum(columns: ["tmp", "_value"])
     |> map(fn: (r) => ({_time: r._time, experimentId: r.experimentId, _value: r._value / r.tmp}))
-//     |> cumulativeSum(columns: ["tmp"])
-    |> yield(name: "mean")
+
+
+//todo sorted experimentIds from earliest
+from(bucket: "data")
+    |> range(start: -inf)
+    |> filter(fn: (r) => r["_measurement"] == "classifierResult" and r["_field"] == "classificationDuration")
+    |> group(columns: ["experimentId"])
+    |> keep(columns: ["_time", "experimentId"])
+    |> sort(columns: ["_time"])
+    |> limit(n: 1)
+    |> group() //so it merges streams for each experimentId into one stream
+    |> sort(columns: ["_time"])
