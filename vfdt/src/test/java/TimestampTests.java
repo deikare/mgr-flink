@@ -23,7 +23,7 @@ public class TimestampTests {
                     }
                     builder.append(nanosecondsString);
                     String expectedResult = time.getEpochSecond() + builder.toString();
-                    return dynamicTest(nanosecondsString, () -> assertEquals(expectedResult, time.getEpochSecond() + String.format("%09d", nanoseconds)));
+                    return dynamicTest("ns: " + nanosecondsString, () -> assertEquals(expectedResult, time.getEpochSecond() + String.format("%09d", nanoseconds)));
                 });
     }
 
