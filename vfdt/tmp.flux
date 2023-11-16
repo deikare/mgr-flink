@@ -57,4 +57,4 @@ from(bucket: "data")
     |> sort(columns: ["_time"])
     |> limit(n: 1)
     |> group() //so it merges streams for each experimentId into one stream
-    |> sort(columns: ["_time"])
+    |> sort(columns: ["_time"], desc: true)
