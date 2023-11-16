@@ -15,6 +15,6 @@ influx bucket list --host $HOST -t $TOKEN -o $ORG
 
 influx template validate --file $CONFIG_PATH/templates -R -e json --host $HOST
 
-influx apply --host $HOST -o $ORG -t $TOKEN --file $CONFIG_PATH/templates -R --force yes
+influx apply --host $HOST -o $ORG -t $TOKEN --file $CONFIG_PATH/templates -R --force yes #todo add check whether applied template already exists
 
 influx dashboards --host $HOST -o $ORG -t $TOKEN
