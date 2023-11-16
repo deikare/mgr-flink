@@ -69,7 +69,6 @@ services:
       - influxdb
     volumes:
       - ./configs/influxdb:/etc/influxdb/configs:ro
-      - ./mounts/influxdbv2:/var/lib/influxdb2:rw
 
   telegraf:
     image: telegraf:1.26.1

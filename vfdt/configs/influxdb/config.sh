@@ -8,22 +8,13 @@ HOST="http://influxdb:8086"
 
 CONFIG_PATH="/etc/influxdb/configs"
 
-#influx setup --bucket data --host=$HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f -r 4h
+influx setup --bucket data --host $HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f
 
-influx setup --bucket data --host=$HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f
 
-#influx bucket create --host=$HOST -t $TOKEN -o $ORG -n data-downsampled -r 24h
-#
-#influx bucket create --host=$HOST -t $TOKEN -o $ORG -n data-downsampled2
-#
-#influx bucket create --host=$HOST -t $TOKEN -o $ORG -n logs
-#
-#influx bucket create --host=$HOST -t $TOKEN -o $ORG -n hubs
+influx bucket list --host $HOST -t $TOKEN -o $ORG
 
-influx bucket list --host=$HOST -t $TOKEN -o $ORG
+influx template validate --file $CONFIG_PATH/templates -R -e json --host $HOST
 
-#influx task create --host=$HOST -t $TOKEN -o $ORG --file $CONFIG_PATH/basic-downsampler.flux
-#
-#influx task create --host=$HOST -t $TOKEN -o $ORG --file $CONFIG_PATH/secondary-downsampler.flux
-#
-#influx task list --host=$HOST -t $TOKEN -o $ORG
+influx apply --host $HOST -o $ORG -t $TOKEN --file $CONFIG_PATH/templates -R --force yes
+
+influx dashboards --host $HOST -o $ORG -t $TOKEN
