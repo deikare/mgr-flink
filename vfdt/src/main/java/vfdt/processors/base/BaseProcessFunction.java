@@ -17,7 +17,6 @@ import java.util.stream.Collectors;
 public abstract class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
     protected transient ValueState<C> classifierState;
     protected String name;
-    protected String experimentId = UUID.randomUUID().toString();
     protected String dataset;
 
     public BaseProcessFunction(String name, String dataset) {
@@ -46,7 +45,7 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         String result = "classifierResult";
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_NAME, name);
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifier.generateClassifierParams());
-        result += "," + produceTag(BaseClassifierTags.EXPERIMENT_ID, experimentId);
+        result += "," + produceTag(BaseClassifierTags.JOB_ID, getRuntimeContext().getJobId().toString());
         result += "," + produceTag(BaseClassifierTags.DATASET, dataset);
         result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
         result += "," + produceTag(BaseClassifierTags.PREDICTED, classifyResult.f0) + " ";

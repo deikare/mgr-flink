@@ -1,0 +1,168 @@
+[
+  {
+    "apiVersion": "influxdata.com/v2alpha1",
+    "kind": "Dashboard",
+    "metadata": {
+      "name": "rustling-nobel-48d001"
+    },
+    "spec": {
+      "charts": [
+        {
+          "axes": [
+            {
+              "base": "10",
+              "name": "x",
+              "scale": "linear"
+            },
+            {
+              "base": "10",
+              "label": "Accuracy [%]",
+              "name": "y",
+              "scale": "linear"
+            }
+          ],
+          "colorizeRows": true,
+          "colors": [
+            {
+              "id": "VmhXzfjPoQPddgzTVZC1u",
+              "name": "Nineteen Eighty Four",
+              "type": "scale",
+              "hex": "#31C0F6"
+            },
+            {
+              "id": "rVh3C8S7weGZrXZ1n-0ls",
+              "name": "Nineteen Eighty Four",
+              "type": "scale",
+              "hex": "#A500A5"
+            },
+            {
+              "id": "J6IlmoiOf3RvhFQgCWvVc",
+              "name": "Nineteen Eighty Four",
+              "type": "scale",
+              "hex": "#FF7E27"
+            }
+          ],
+          "geom": "line",
+          "height": 6,
+          "heightRatio": 0.2,
+          "hoverDimension": "auto",
+          "kind": "Xy",
+          "legendColorizeRows": true,
+          "legendOpacity": 1,
+          "legendOrientationThreshold": 100000000,
+          "name": "Accuracy",
+          "opacity": 1,
+          "orientationThreshold": -1,
+          "position": "overlaid",
+          "queries": [
+            {
+              "query": "from(bucket: \"data\")\n    |> range(start: -inf)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\")\n    |> filter(\n        fn: (r) =>\n            r[\"_field\"]\n                ==\n                \"classificationDuration\",\n    )\n    |> group(columns: [\"jobId\"])\n    |> sort(columns: [\"_time\"])\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1.0 else 0.0,\n                tmp: 1.0\n            }),\n    )\n//     |> group(columns: [\"jobId\"])\n    |> cumulativeSum(columns: [\"tmp\", \"_value\"])\n    |> map(fn: (r) => ({_time: r._time, jobId: r.jobId, _value: 100.0 * r._value / r.tmp}))"
+            }
+          ],
+          "staticLegend": {
+            "colorizeRows": true,
+            "heightRatio": 0.2,
+            "opacity": 1,
+            "orientationThreshold": -1,
+            "widthRatio": 1
+          },
+          "width": 8,
+          "widthRatio": 1,
+          "xCol": "_time",
+          "yCol": "_value"
+        },
+        {
+          "colors": [
+            {
+              "id": "base",
+              "name": "white",
+              "type": "text",
+              "hex": "#ffffff"
+            }
+          ],
+          "fieldOptions": [
+            {
+              "displayName": "jobId",
+              "fieldName": "jobId",
+              "visible": true
+            },
+            {
+              "displayName": "avg",
+              "fieldName": "avg",
+              "visible": true
+            },
+            {
+              "displayName": "jobId",
+              "fieldName": "jobId",
+              "visible": true
+            },
+            {
+              "displayName": "accuracy",
+              "fieldName": "accuracy",
+              "visible": true
+            }
+          ],
+          "height": 4,
+          "kind": "Table",
+          "name": "Accuracies",
+          "queries": [
+            {
+              "query": "from(bucket: \"data\")\n    |> range(start: -inf)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\" and r[\"_field\"] == \"classificationDuration\")\n    |> group(columns: [\"jobId\"])\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1 else 0,\n            }),\n    )\n    |> group(columns: [\"jobId\"])\n    |> reduce(\n        fn: (r, accumulator) =>\n            ({\n                count: accumulator.count + 1,\n                total: accumulator.total + r._value,\n                accuracy: float(v: accumulator.total + r._value) / float(v: accumulator.count + 1),\n            }),\n        identity: {count: 0, total: 0, accuracy: 0.0},\n    )\n    |> keep(columns: [\"jobId\", \"accuracy\"])\n    |> group()\n    |> sort(columns: [\"accuracy\"], desc: true)"
+            }
+          ],
+          "staticLegend": {},
+          "tableOptions": {
+            "verticalTimeAxis": true
+          },
+          "timeFormat": "YYYY-MM-DD HH:mm:ss",
+          "width": 4,
+          "xPos": 8
+        },
+        {
+          "colors": [
+            {
+              "id": "base",
+              "name": "white",
+              "type": "text",
+              "hex": "#ffffff"
+            }
+          ],
+          "fieldOptions": [
+            {
+              "displayName": "_time",
+              "fieldName": "_time",
+              "visible": true
+            },
+            {
+              "displayName": "jobId",
+              "fieldName": "jobId",
+              "visible": true
+            },
+            {
+              "displayName": "started",
+              "fieldName": "started",
+              "visible": true
+            }
+          ],
+          "height": 2,
+          "kind": "Table",
+          "name": "Jobs history",
+          "queries": [
+            {
+              "query": "from(bucket: \"data\")\n    |> range(start: -inf)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\" and r[\"_field\"] == \"classificationDuration\")\n    |> group(columns: [\"jobId\"])\n    |> keep(columns: [\"_time\", \"jobId\"])\n    |> sort(columns: [\"_time\"])\n    |> limit(n: 1)\n    |> group() //so it merges streams for each jobId into one stream\n    |> sort(columns: [\"_time\"], desc: true)\n    |> rename(columns: {\"_time\": \"started\"})"
+            }
+          ],
+          "staticLegend": {},
+          "tableOptions": {
+            "verticalTimeAxis": true
+          },
+          "timeFormat": "YYYY-MM-DD HH:mm:ss",
+          "width": 4,
+          "xPos": 8,
+          "yPos": 4
+        }
+      ],
+      "name": "Results"
+    }
+  }
+]
