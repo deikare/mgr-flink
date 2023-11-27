@@ -7,6 +7,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 
+//todo think about encoding all attribute and class labels from string to index in arrays so
+// all hashmaps can be transformed to arrays
 public class SimpleNodeStatistics extends NodeStatistics {
     private final HashMap<String, HashMap<Double, Long>> attributeValueCounts;
 
