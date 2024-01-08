@@ -1,9 +1,10 @@
 package vfdt.classifiers.base;
 
+import java.io.Serializable;
 import java.time.Duration;
 import java.time.Instant;
 
-public abstract class BaseClassifier {
+public abstract class BaseClassifier implements Serializable {
     public abstract String generateClassifierParams();
 
     protected long toNow(Instant start) {
