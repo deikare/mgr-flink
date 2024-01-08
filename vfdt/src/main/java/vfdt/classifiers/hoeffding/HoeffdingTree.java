@@ -3,7 +3,7 @@ package vfdt.classifiers.hoeffding;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import vfdt.classifiers.base.BaseClassifierStraight;
+import vfdt.classifiers.base.BaseClassifierTrainAndClassify;
 import vfdt.inputs.Example;
 
 import java.io.File;
@@ -72,7 +72,7 @@ czy od razu robić np klasyfikator bayesowski - w następnym etapie
 - liczba próbek błędnie sklasyfikowanych
  */
 
-public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifierStraight {
+public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifierTrainAndClassify {
     private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
     private final long nMin;
 
