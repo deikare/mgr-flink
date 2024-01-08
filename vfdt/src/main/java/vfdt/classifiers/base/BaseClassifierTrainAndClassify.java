@@ -6,7 +6,7 @@ import vfdt.inputs.Example;
 import java.time.Instant;
 import java.util.HashMap;
 
-public abstract class BaseClassifierStraight extends BaseClassifier {
+public abstract class BaseClassifierTrainAndClassify extends BaseClassifier {
     public Tuple2<String, HashMap<String, Long>> train(Example example) {
         Instant start = Instant.now();
         HashMap<String, Long> trainingPerformance = trainImplementation(example);

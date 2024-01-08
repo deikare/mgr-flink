@@ -8,7 +8,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.HashMap;
 
-public abstract class BaseClassifierReversed extends BaseClassifier implements Serializable {
+public abstract class BaseClassifierClassifyAndTrain extends BaseClassifier implements Serializable {
     public HashMap<String, Long> train(Example example, HashMap<String, Long> performances) {
         Instant start = Instant.now();
         HashMap<String, Long> trainingPerformance = trainImplementation(example, performances);

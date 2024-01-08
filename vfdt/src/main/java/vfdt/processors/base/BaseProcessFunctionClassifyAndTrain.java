@@ -2,13 +2,13 @@ package vfdt.processors.base;
 
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
-import vfdt.classifiers.base.BaseClassifierReversed;
+import vfdt.classifiers.base.BaseClassifierClassifyAndTrain;
 import vfdt.inputs.Example;
 
 import java.util.HashMap;
 
-public abstract class BaseProcessFunctionReversed<C extends BaseClassifierReversed> extends BaseProcessFunction<C> {
-    public BaseProcessFunctionReversed(String name, String dataset) {
+public abstract class BaseProcessFunctionClassifyAndTrain<C extends BaseClassifierClassifyAndTrain> extends BaseProcessFunction<C> {
+    public BaseProcessFunctionClassifyAndTrain(String name, String dataset) {
         super(name, dataset);
     }
 

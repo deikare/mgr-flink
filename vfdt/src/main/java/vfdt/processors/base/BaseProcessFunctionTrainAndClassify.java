@@ -2,13 +2,13 @@ package vfdt.processors.base;
 
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
-import vfdt.classifiers.base.BaseClassifierStraight;
+import vfdt.classifiers.base.BaseClassifierTrainAndClassify;
 import vfdt.inputs.Example;
 
 import java.util.HashMap;
 
-public abstract class BaseProcessFunctionStraight<C extends BaseClassifierStraight> extends BaseProcessFunction<C> {
-    public BaseProcessFunctionStraight(String name, String dataset) {
+public abstract class BaseProcessFunctionTrainAndClassify<C extends BaseClassifierTrainAndClassify> extends BaseProcessFunction<C> {
+    public BaseProcessFunctionTrainAndClassify(String name, String dataset) {
         super(name, dataset);
     }
 
