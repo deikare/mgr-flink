@@ -6,9 +6,9 @@ import org.apache.flink.api.common.typeinfo.TypeInformation;
 import vfdt.classifiers.hoeffding.HoeffdingTree;
 import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
 import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
-import vfdt.processors.base.BaseProcessFunction;
+import vfdt.processors.base.BaseProcessFunctionStraight;
 
-public abstract class VfdtProcessFunction extends BaseProcessFunction<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> {
+public abstract class VfdtProcessFunction extends BaseProcessFunctionStraight<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> {
     public VfdtProcessFunction(String name, String dataset) {
         super(name, dataset);
     }
