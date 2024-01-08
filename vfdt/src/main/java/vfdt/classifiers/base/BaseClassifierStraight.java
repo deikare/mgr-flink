@@ -3,12 +3,10 @@ package vfdt.classifiers.base;
 import org.apache.flink.api.java.tuple.Tuple2;
 import vfdt.inputs.Example;
 
-import java.io.Serializable;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.HashMap;
 
-public abstract class BaseClassifierStraight extends BaseClassifier implements Serializable {
+public abstract class BaseClassifierStraight extends BaseClassifier {
     public Tuple2<String, HashMap<String, Long>> train(Example example) {
         Instant start = Instant.now();
         HashMap<String, Long> trainingPerformance = trainImplementation(example);
