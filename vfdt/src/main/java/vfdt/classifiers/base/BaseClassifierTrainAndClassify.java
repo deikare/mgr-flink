@@ -4,24 +4,24 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import vfdt.inputs.Example;
 
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public abstract class BaseClassifierTrainAndClassify extends BaseClassifier {
-    public Tuple2<String, HashMap<String, Long>> train(Example example) {
+    public Tuple2<String, ArrayList<Tuple2<String, Long>>> train(Example example) {
         Instant start = Instant.now();
-        HashMap<String, Long> trainingPerformance = trainImplementation(example);
-        trainingPerformance.put(BaseClassifierFields.TRAINING_DURATION, toNow(start));
+        ArrayList<Tuple2<String, Long>> trainingPerformance = trainImplementation(example);
+        trainingPerformance.add(Tuple2.of(BaseClassifierFields.TRAINING_DURATION, toNow(start)));
         return new Tuple2<>(timestampTrailingZeros(start), trainingPerformance);
     }
 
-    public Tuple2<Integer, HashMap<String, Long>> classify(Example example, HashMap<String, Long> performances) {
+    public Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classify(Example example, ArrayList<Tuple2<String, Long>> performances) {
         Instant start = Instant.now();
-        Tuple2<Integer, HashMap<String, Long>> predictionResult = classifyImplementation(example, performances);
-        predictionResult.f1.put(BaseClassifierFields.CLASSIFICATION_DURATION, toNow(start));
+        Tuple2<Integer, ArrayList<Tuple2<String, Long>>> predictionResult = classifyImplementation(example, performances);
+        predictionResult.f1.add(Tuple2.of(BaseClassifierFields.CLASSIFICATION_DURATION, toNow(start)));
         return predictionResult;
     }
 
-    protected abstract HashMap<String, Long> trainImplementation(Example example);
+    protected abstract ArrayList<Tuple2<String, Long>> trainImplementation(Example example);
 
-    protected abstract Tuple2<Integer, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances);
+    protected abstract Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example, ArrayList<Tuple2<String, Long>> performances);
 }
