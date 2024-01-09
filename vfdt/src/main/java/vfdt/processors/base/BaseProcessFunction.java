@@ -33,7 +33,7 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         Tuple4<String, Integer, ArrayList<Tuple2<String, Long>>, C> results = processExample(example, classifier);
         classifierState.update(results.f3);
 
-        String msg = produceMessage(classifier, results.f0, results.f1, example.getMappedClass(), results.f2);
+        String msg = produceMessage(results.f3, results.f0, results.f1, example.getMappedClass(), results.f2);
         collector.collect(msg);
     }
 
