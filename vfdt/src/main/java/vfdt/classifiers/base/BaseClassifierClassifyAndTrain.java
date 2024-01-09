@@ -9,9 +9,9 @@ import java.time.Instant;
 import java.util.ArrayList;
 
 public abstract class BaseClassifierClassifyAndTrain extends BaseClassifier implements Serializable {
-    public ArrayList<Tuple2<String, Long>> train(Example example, ArrayList<Tuple2<String, Long>> performances) {
+    public ArrayList<Tuple2<String, Long>> train(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
         Instant start = Instant.now();
-        ArrayList<Tuple2<String, Long>> trainingPerformance = trainImplementation(example, performances);
+        ArrayList<Tuple2<String, Long>> trainingPerformance = trainImplementation(example, predictedClass, performances);
         trainingPerformance.add(Tuple2.of(BaseClassifierFields.TRAINING_DURATION, toNow(start)));
         return trainingPerformance;
     }
@@ -23,7 +23,7 @@ public abstract class BaseClassifierClassifyAndTrain extends BaseClassifier impl
         return new Tuple3<>(timestampTrailingZeros(start), predictionResult.f0, predictionResult.f1);
     }
 
-    protected abstract ArrayList<Tuple2<String, Long>> trainImplementation(Example example, ArrayList<Tuple2<String, Long>> performances);
+    protected abstract ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances);
 
     protected abstract Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example);
 }
