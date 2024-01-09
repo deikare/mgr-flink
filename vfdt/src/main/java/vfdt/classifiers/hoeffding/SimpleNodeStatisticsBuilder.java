@@ -1,16 +1,14 @@
 package vfdt.classifiers.hoeffding;
 
-import java.util.HashSet;
-
 public class SimpleNodeStatisticsBuilder implements StatisticsBuilderInterface<SimpleNodeStatistics> {
-    private final HashSet<String> attributes;
+    private final int attributesNumber;
 
-    public SimpleNodeStatisticsBuilder(HashSet<String> attributes) {
-        this.attributes = attributes;
+    public SimpleNodeStatisticsBuilder(int attributesNumber) {
+        this.attributesNumber = attributesNumber;
     }
 
     @Override
     public SimpleNodeStatistics build() {
-        return new SimpleNodeStatistics(this.attributes);
+        return new SimpleNodeStatistics(this.attributesNumber);
     }
 }

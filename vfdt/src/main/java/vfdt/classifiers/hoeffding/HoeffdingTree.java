@@ -78,26 +78,26 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 
     private final int R;
     private final double delta;
-    private final HashSet<String> attributes; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
+    private final int attributesNumber; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
     private final double tau;
     private final Node<N_S, B> root;
     private final B statisticsBuilder;
     private long n = 0L;
 
 
-    public HoeffdingTree(long classesNumber, double delta, HashSet<String> attributes, double tau, long nMin, B statisticsBuilder) {
+    public HoeffdingTree(long classesNumber, double delta, int attributesNumber, double tau, long nMin, B statisticsBuilder) {
         this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
-        this.attributes = attributes;
+        this.attributesNumber = attributesNumber;
         this.tau = tau;
         this.nMin = nMin;
         this.statisticsBuilder = statisticsBuilder;
         this.root = new Node<>(statisticsBuilder);
     }
 
-    protected Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
+    protected Tuple2<Integer, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
         Node<N_S, B> leaf = getLeaf(example);
-        String predictedClass = leaf.getMajorityClass();
+        int predictedClass = leaf.getMajorityClass();
         logger.info(example + " predicted with " + predictedClass);
         return new Tuple2<>(predictedClass, performances);
     }
@@ -121,16 +121,16 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 
             HighestHeuristicPOJO pojo = new HighestHeuristicPOJO(leaf);
 
-            if (pojo.attribute == null) {
+            if (pojo.attributeNumber == null) {
                 String msg = "Hoeffding test showed no attributes";
                 logger.info(msg);
                 throw new RuntimeException(msg);
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
-                leaf.split(pojo.attribute, statisticsBuilder, example);
+                leaf.split(pojo.attributeNumber, statisticsBuilder, example);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
-                leaf.split(pojo.attribute, statisticsBuilder, example);
+                leaf.split(pojo.attributeNumber, statisticsBuilder, example);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
 
@@ -165,93 +165,93 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     }
 
     private class HighestHeuristicPOJO {
-        final String attribute;
+        final Integer attributeNumber;
         final Double hXa;
         final Double hXb;
 
         public HighestHeuristicPOJO(Node<N_S, B> node) {
             Double hXbTemp = null;
             Double hXaTemp = null;
-            String xaTemp = null;
-            String xbTemp = null;
+            Integer xaTemp = null;
+            Integer xbTemp = null;
 
-            for (String attribute : attributes) {
-                double h = heuristic(attribute, node);
+            for (int i = 0; i < attributesNumber; i++) {
+                double h = heuristic(i, node);
                 if (xaTemp == null || h > hXaTemp) {
-                    xaTemp = attribute;
+                    xaTemp = i;
                     hXaTemp = h;
                 } else if (xbTemp == null || h > hXbTemp) {
-                    xbTemp = attribute;
+                    xbTemp = i;
                     hXbTemp = h;
                 }
             }
 
             hXb = hXbTemp;
             hXa = hXaTemp;
-            attribute = xaTemp;
+            attributeNumber = xaTemp;
         }
     }
 
-    protected abstract double heuristic(String attribute, Node<N_S, B> node);
+    protected abstract double heuristic(int attributeIndex, Node<N_S, B> node);
 
-    public static void main(String[] args) {
-        String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
-        HashSet<String> attributes = new HashSet<>();
-
-        try {
-            File file = new File(path);
-            Scanner scanner = new Scanner(file);
-
-            String line = scanner.nextLine();
-
-            String[] attributesAsString = line.split(",");
-            System.out.println(attributesAsString[attributesAsString.length - 1]);
-            int n = attributesAsString.length - 1;
-            attributes.addAll(Arrays.asList(attributesAsString).subList(0, n));
-
-            SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-            double delta = 0.05;
-            double tau = 0.2;
-            long nMin = 50;
-            long batchStatLength = 500;
-            long classesAmount = 2;
-
-
-            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder) {
-                @Override
-                protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
-                    return 0;
-                }
-            };
-
-            while (scanner.hasNext()) {
-                line = scanner.nextLine();
-
-                String[] attributesValuesAsString = line.split(",");
-                HashMap<String, Double> attributesMap = new HashMap<>(n);
-                for (int i = 0; i < n; i++) {
-                    attributesMap.put(attributesAsString[i], Double.parseDouble(attributesValuesAsString[i]));
-                }
-
-                String className = attributesValuesAsString[n];
-                Example example = new Example(className, attributesMap);
-
-                tree.trainImplementation(example);
-
-//                if (tree.classifyImplementation(example) == null)
-//                    tree.classifyImplementation(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
-            }
-
-//            System.out.println(tree.printStatistics());
-//            tree.printStatisticsToFile(path);
-        } catch (FileNotFoundException e) {
-            System.out.println("No file found");
-            e.printStackTrace();
-        }
-//        } catch (UnsupportedEncodingException e) {
-//            throw new RuntimeException(e);
+//    public static void main(String[] args) {
+//        String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
+//        HashSet<String> attributes = new HashSet<>();
+//
+//        try {
+//            File file = new File(path);
+//            Scanner scanner = new Scanner(file);
+//
+//            String line = scanner.nextLine();
+//
+//            String[] attributesAsString = line.split(",");
+//            System.out.println(attributesAsString[attributesAsString.length - 1]);
+//            int n = attributesAsString.length - 1;
+//            attributes.addAll(Arrays.asList(attributesAsString).subList(0, n));
+//
+//            SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
+//            double delta = 0.05;
+//            double tau = 0.2;
+//            long nMin = 50;
+//            long batchStatLength = 500;
+//            long classesAmount = 2;
+//
+//
+//            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder) {
+//                @Override
+//                protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+//                    return 0;
+//                }
+//            };
+//
+//            while (scanner.hasNext()) {
+//                line = scanner.nextLine();
+//
+//                String[] attributesValuesAsString = line.split(",");
+//                HashMap<String, Double> attributesMap = new HashMap<>(n);
+//                for (int i = 0; i < n; i++) {
+//                    attributesMap.put(attributesAsString[i], Double.parseDouble(attributesValuesAsString[i]));
+//                }
+//
+//                String className = attributesValuesAsString[n];
+//                Example example = new Example(className, attributesMap);
+//
+//                tree.trainImplementation(example);
+//
+////                if (tree.classifyImplementation(example) == null)
+////                    tree.classifyImplementation(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
+//            }
+//
+////            System.out.println(tree.printStatistics());
+////            tree.printStatisticsToFile(path);
+//        } catch (FileNotFoundException e) {
+//            System.out.println("No file found");
+//            e.printStackTrace();
 //        }
-    }
+////        } catch (UnsupportedEncodingException e) {
+////            throw new RuntimeException(e);
+////        }
+//    }
 
 
 }

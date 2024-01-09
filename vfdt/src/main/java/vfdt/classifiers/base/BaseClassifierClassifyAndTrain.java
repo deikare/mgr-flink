@@ -16,14 +16,14 @@ public abstract class BaseClassifierClassifyAndTrain extends BaseClassifier impl
         return trainingPerformance;
     }
 
-    public Tuple3<String, String, HashMap<String, Long>> classify(Example example) {
+    public Tuple3<String, Integer, HashMap<String, Long>> classify(Example example) {
         Instant start = Instant.now();
-        Tuple2<String, HashMap<String, Long>> predictionResult = classifyImplementation(example);
+        Tuple2<Integer, HashMap<String, Long>> predictionResult = classifyImplementation(example);
         predictionResult.f1.put(BaseClassifierFields.CLASSIFICATION_DURATION, toNow(start));
         return new Tuple3<>(timestampTrailingZeros(start), predictionResult.f0, predictionResult.f1);
     }
 
     protected abstract HashMap<String, Long> trainImplementation(Example example, HashMap<String, Long> performances);
 
-    protected abstract Tuple2<String, HashMap<String, Long>> classifyImplementation(Example example);
+    protected abstract Tuple2<Integer, HashMap<String, Long>> classifyImplementation(Example example);
 }

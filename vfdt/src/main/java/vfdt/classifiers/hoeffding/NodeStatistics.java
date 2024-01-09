@@ -2,37 +2,39 @@ package vfdt.classifiers.hoeffding;
 
 import vfdt.inputs.Example;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
 
 public class NodeStatistics implements StatisticsInterface {
     private long n;
 
-    private final HashMap<String, Long> classCounts;
+    private final long[] classCounts;
 
-    public NodeStatistics() {
+    public NodeStatistics(int classNumber) {
         n = 0;
-        classCounts = new HashMap<>();
+        classCounts = new long[classNumber];
     }
 
     public void update(Example example) {
         n++;
-        String exampleClass = example.getClassName();
-        classCounts.merge(exampleClass, 1L, Long::sum);
-
+        classCounts[example.getMappedClass()] += 1L;
     }
 
     @Override
-    public String getMajorityClass() {
-        String result = null;
-        if (!classCounts.isEmpty())
-            result = Collections.max(classCounts.entrySet(), Map.Entry.comparingByValue()).getKey();
-        return result;
+    public int getMajorityClass() {
+        int majorityClass = 0;
+        long majorityCount = classCounts[0];
+
+        for (int i = 1; i < classCounts.length; i++) {
+            if (classCounts[i] > majorityCount) {
+                majorityClass = i;
+                majorityCount = classCounts[i];
+            }
+        }
+        return majorityClass;
     }
 
     @Override
-    public double getSplittingValue(String attribute) {
+    public double getSplittingValue(int attributeNumber) {
         return 0;
     }
 
@@ -48,7 +50,7 @@ public class NodeStatistics implements StatisticsInterface {
     public String toString() {
         return "NodeStatistics{" +
                 "n=" + n +
-                ", classCounts=" + classCounts +
+                ", classCounts=" + Arrays.toString(classCounts) +
                 '}';
     }
 }

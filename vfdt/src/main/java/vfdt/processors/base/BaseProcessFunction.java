@@ -29,18 +29,18 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         if (classifier == null)
             classifier = createClassifier();
 
-        Tuple4<String, String, HashMap<String, Long>, C> results = processExample(example, classifier);
+        Tuple4<String, Integer, HashMap<String, Long>, C> results = processExample(example, classifier);
         classifierState.update(results.f3);
 
-        String msg = produceMessage(classifier, results.f0, results.f1, example.getClassName(), results.f2);
+        String msg = produceMessage(classifier, results.f0, results.f1, example.getMappedClass(), results.f2);
         collector.collect(msg);
     }
 
-    protected abstract Tuple4<String, String, HashMap<String, Long>, C> processExample(Example example, C classifier);
+    protected abstract Tuple4<String, Integer, HashMap<String, Long>, C> processExample(Example example, C classifier);
 
     protected abstract C createClassifier();
 
-    protected String produceMessage(C classifier, String timestamp, String predicted, String exampleClass, HashMap<String, Long> performances) throws IOException {
+    protected String produceMessage(C classifier, String timestamp, int predicted, int exampleClass, HashMap<String, Long> performances) throws IOException {
         String result = "classifierResult";
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_NAME, name);
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifier.generateClassifierParams());
