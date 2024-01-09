@@ -80,8 +80,13 @@ public class DataStreamJob {
                     attributesValues[i] = Double.parseDouble(attributeValuesAsString[i]);
                 }
 
-                String className = attributeValuesAsString[n];
-                examples.add(new Example(encoder.encode(className), attributesValues));
+                //if encoding/decoding needed - add decoder in keyedProcessFunction
+//                String className = attributeValuesAsString[n];
+//                examples.add(new Example(encoder.encode(className), attributesValues));
+
+                encoder.encode(attributeValuesAsString[n]);
+                int className = Integer.parseInt(attributeValuesAsString[n]);
+                examples.add(new Example(className, attributesValues));
             }
         } catch (FileNotFoundException | NumberFormatException e) {
             throw new RuntimeException(e);
