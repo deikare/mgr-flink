@@ -9,10 +9,7 @@ import vfdt.inputs.Example;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Scanner;
+import java.util.*;
 
 /*TODO etap 2
 - przerzucić liczenie statystyk do grafany - process function zwraca jsona z zmierzonymi statystykami
@@ -95,7 +92,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         this.root = new Node<>(statisticsBuilder);
     }
 
-    protected Tuple2<Integer, HashMap<String, Long>> classifyImplementation(Example example, HashMap<String, Long> performances) throws RuntimeException {
+    protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example, ArrayList<Tuple2<String, Long>> performances) throws RuntimeException {
         Node<N_S, B> leaf = getLeaf(example);
         int predictedClass = leaf.getMajorityClass();
         logger.info(example + " predicted with " + predictedClass);
@@ -107,9 +104,9 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         return "r" + R + "_d" + delta + "_t" + tau + "_n" + nMin;
     }
 
-    protected HashMap<String, Long> trainImplementation(Example example) throws RuntimeException {
+    protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example) throws RuntimeException {
         n++;
-        HashMap<String, Long> trainingPerformances = new HashMap<>();
+        ArrayList<Tuple2<String, Long>> trainingPerformances = new ArrayList<>();
         Node<N_S, B> leaf = getLeaf(example, trainingPerformances);
         logger.info("Training: " + example.toString());
 
@@ -139,7 +136,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         return trainingPerformances;
     }
 
-    private Node<N_S, B> getLeaf(Example example, HashMap<String, Long> performances) {
+    private Node<N_S, B> getLeaf(Example example, ArrayList<Tuple2<String, Long>> performances) {
         Instant start = Instant.now();
         long count = 1;
         Node<N_S, B> result = root;
@@ -147,8 +144,8 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
             count++;
             result = result.getChild(example);
         }
-        performances.put(HoeffdingTreeFields.NODES_DURING_TRAVERSAL_COUNT, count);
-        performances.put(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, toNow(start));
+        performances.add(Tuple2.of(HoeffdingTreeFields.NODES_DURING_TRAVERSAL_COUNT, count));
+        performances.add(Tuple2.of(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, toNow(start)));
         return result;
     }
 

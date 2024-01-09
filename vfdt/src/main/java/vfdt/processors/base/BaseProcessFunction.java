@@ -1,6 +1,7 @@
 package vfdt.processors.base;
 
 import org.apache.flink.api.common.state.ValueState;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.streaming.api.functions.KeyedProcessFunction;
@@ -10,7 +11,7 @@ import vfdt.classifiers.base.BaseClassifierTags;
 import vfdt.inputs.Example;
 
 import java.io.IOException;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public abstract class BaseProcessFunction<C extends BaseClassifier> extends KeyedProcessFunction<Long, Example, String> {
@@ -29,18 +30,18 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         if (classifier == null)
             classifier = createClassifier();
 
-        Tuple4<String, Integer, HashMap<String, Long>, C> results = processExample(example, classifier);
+        Tuple4<String, Integer, ArrayList<Tuple2<String, Long>>, C> results = processExample(example, classifier);
         classifierState.update(results.f3);
 
         String msg = produceMessage(classifier, results.f0, results.f1, example.getMappedClass(), results.f2);
         collector.collect(msg);
     }
 
-    protected abstract Tuple4<String, Integer, HashMap<String, Long>, C> processExample(Example example, C classifier);
+    protected abstract Tuple4<String, Integer, ArrayList<Tuple2<String, Long>>, C> processExample(Example example, C classifier);
 
     protected abstract C createClassifier();
 
-    protected String produceMessage(C classifier, String timestamp, int predicted, int exampleClass, HashMap<String, Long> performances) throws IOException {
+    protected String produceMessage(C classifier, String timestamp, int predicted, int exampleClass, ArrayList<Tuple2<String, Long>> performances) throws IOException {
         String result = "classifierResult";
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_NAME, name);
         result += "," + produceTag(BaseClassifierTags.CLASSIFIER_PARAMS, classifier.generateClassifierParams());
@@ -49,7 +50,7 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         result += "," + produceTag(BaseClassifierTags.CLASS, exampleClass);
         result += "," + produceTag(BaseClassifierTags.PREDICTED, predicted) + " ";
 
-        result += performances.entrySet().stream().map(entry -> produceFieldAsNumber(entry.getKey(), entry.getValue(), "i")).collect(Collectors.joining(",")) + " ";
+        result += performances.stream().map(entry -> produceFieldAsNumber(entry.f0, entry.f1, "i")).collect(Collectors.joining(",")) + " ";
 
         result += timestamp;
 

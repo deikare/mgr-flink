@@ -6,24 +6,24 @@ import vfdt.inputs.Example;
 
 import java.io.Serializable;
 import java.time.Instant;
-import java.util.HashMap;
+import java.util.ArrayList;
 
 public abstract class BaseClassifierClassifyAndTrain extends BaseClassifier implements Serializable {
-    public HashMap<String, Long> train(Example example, HashMap<String, Long> performances) {
+    public ArrayList<Tuple2<String, Long>> train(Example example, ArrayList<Tuple2<String, Long>> performances) {
         Instant start = Instant.now();
-        HashMap<String, Long> trainingPerformance = trainImplementation(example, performances);
-        trainingPerformance.put(BaseClassifierFields.TRAINING_DURATION, toNow(start));
+        ArrayList<Tuple2<String, Long>> trainingPerformance = trainImplementation(example, performances);
+        trainingPerformance.add(Tuple2.of(BaseClassifierFields.TRAINING_DURATION, toNow(start)));
         return trainingPerformance;
     }
 
-    public Tuple3<String, Integer, HashMap<String, Long>> classify(Example example) {
+    public Tuple3<String, Integer, ArrayList<Tuple2<String, Long>>> classify(Example example) {
         Instant start = Instant.now();
-        Tuple2<Integer, HashMap<String, Long>> predictionResult = classifyImplementation(example);
-        predictionResult.f1.put(BaseClassifierFields.CLASSIFICATION_DURATION, toNow(start));
+        Tuple2<Integer, ArrayList<Tuple2<String, Long>>> predictionResult = classifyImplementation(example);
+        predictionResult.f1.add(Tuple2.of(BaseClassifierFields.CLASSIFICATION_DURATION, toNow(start)));
         return new Tuple3<>(timestampTrailingZeros(start), predictionResult.f0, predictionResult.f1);
     }
 
-    protected abstract HashMap<String, Long> trainImplementation(Example example, HashMap<String, Long> performances);
+    protected abstract ArrayList<Tuple2<String, Long>> trainImplementation(Example example, ArrayList<Tuple2<String, Long>> performances);
 
-    protected abstract Tuple2<Integer, HashMap<String, Long>> classifyImplementation(Example example);
+    protected abstract Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example);
 }
