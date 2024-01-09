@@ -13,9 +13,9 @@ public abstract class BaseProcessFunctionTrainAndClassify<C extends BaseClassifi
     }
 
     @Override
-    protected Tuple4<String, String, HashMap<String, Long>, C> processExample(Example example, C classifier) {
+    protected Tuple4<String, Integer, HashMap<String, Long>, C> processExample(Example example, C classifier) {
         Tuple2<String, HashMap<String, Long>> trainingResult = classifier.train(example);
-        Tuple2<String, HashMap<String, Long>> classifyResult = classifier.classify(example, trainingResult.f1);
+        Tuple2<Integer, HashMap<String, Long>> classifyResult = classifier.classify(example, trainingResult.f1);
         return new Tuple4<>(trainingResult.f0, classifyResult.f0, classifyResult.f1, classifier);
     }
 }

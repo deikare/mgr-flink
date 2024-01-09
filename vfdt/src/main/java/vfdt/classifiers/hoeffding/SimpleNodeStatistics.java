@@ -2,53 +2,32 @@ package vfdt.classifiers.hoeffding;
 
 import vfdt.inputs.Example;
 
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 
 //todo think about encoding all attribute and class labels from string to index in arrays so
 // all hashmaps can be transformed to arrays
 public class SimpleNodeStatistics extends NodeStatistics {
-    private final HashMap<String, HashMap<Double, Long>> attributeValueCounts;
+    private final List<Map<Double, Long>> attributeValueCounts;
 
-    public SimpleNodeStatistics(HashSet<String> attributes) {
-        super();
-        attributeValueCounts = new HashMap<>();
-        for (String attribute : attributes) {
-            HashMap<Double, Long> attributeValuesCounter = new HashMap<>();
-            attributeValueCounts.put(attribute, attributeValuesCounter);
-        }
+    public SimpleNodeStatistics(int classNumber) {
+        super(classNumber);
+        attributeValueCounts = new ArrayList<>(classNumber);
+        for (int i = 0; i < classNumber; i++)
+            attributeValueCounts.add(i, new HashMap<>());
     }
 
     @Override
     public void update(Example example) throws RuntimeException {
         super.update(example);
-        for (Map.Entry<String, Double> attributeEntry : example.getAttributes().entrySet()) {
-            HashMap<Double, Long> attributeValuesCounter = getAttributeValuesCounter(attributeEntry.getKey());
-
-            Double value = attributeEntry.getValue();
-            Long valueCounts = attributeValuesCounter.get(value);
-            if (valueCounts == null) {
-                attributeValuesCounter.put(value, 1L);
-            } else {
-                attributeValuesCounter.put(value, valueCounts + 1);
-            }
+        double[] exampleAttributes = example.getAttributes();
+        for (int i = 0; i < attributeValueCounts.size(); i++) {
+            attributeValueCounts.get(i).compute(exampleAttributes[i], (key, value) -> (value == null) ? 1L : value + 1L);
         }
-    }
-
-    private HashMap<Double, Long> getAttributeValuesCounter(String attribute) throws RuntimeException {
-        HashMap<Double, Long> attributeValuesCounter = attributeValueCounts.get(attribute);
-        if (attributeValuesCounter == null) {
-            throw new RuntimeException("Example contains undefined attribute");
-        }
-        return attributeValuesCounter;
     }
 
     @Override
-    public double getSplittingValue(String attribute) throws RuntimeException {
-        HashMap<Double, Long> attributeValuesCounter = getAttributeValuesCounter(attribute);
-        return Collections.max(attributeValuesCounter.entrySet(), Map.Entry.comparingByValue()).getKey();
+    public double getSplittingValue(int attributeNumber) throws RuntimeException {
+        return Collections.max(attributeValueCounts.get(attributeNumber).entrySet(), Map.Entry.comparingByValue()).getKey();
     }
 
     @Override

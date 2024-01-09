@@ -9,7 +9,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     private Node<N_S, B> rightChild;
 
     private double splittingValue;
-    private String splittingAttribute;
+    private Integer splittingAttributeNumber;
 
     private N_S statistics;
 
@@ -40,12 +40,12 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         this.splittingValue = splittingValue;
     }
 
-    public String getSplittingAttribute() {
-        return splittingAttribute;
+    public int getSplittingAttributeNumber() {
+        return splittingAttributeNumber;
     }
 
-    public void setSplittingAttribute(String splittingAttribute) {
-        this.splittingAttribute = splittingAttribute;
+    public void setSplittingAttributeNumber(int splittingAttributeNumber) {
+        this.splittingAttributeNumber = splittingAttributeNumber;
     }
 
     public void setStatistics(N_S statistics) {
@@ -56,17 +56,15 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         this.statistics = statisticsBuilder.build();
         leftChild = null;
         rightChild = null;
-        splittingAttribute = null;
+        splittingAttributeNumber = null;
     }
 
     public Node<N_S, B> getChild(Example example) {
         Node<N_S, B> result = null;
 
         if (!isLeaf()) {
-            Double attributeValue = example.getAttributes().get(splittingAttribute);
-            if (attributeValue != null) {
-                result = (attributeValue <= splittingValue) ? leftChild : rightChild;
-            }
+            double attributeValue = example.getAttributes()[splittingAttributeNumber];
+            result = (attributeValue <= splittingValue) ? leftChild : rightChild;
         }
 
         return result;
@@ -80,15 +78,15 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         return leftChild == null || rightChild == null;
     }
 
-    public void split(String splittingAttribute, B statisticsBuilder, Example example) {
-        split(splittingAttribute, statisticsBuilder);
+    public void split(int splittingAttributeNumber, B statisticsBuilder, Example example) {
+        split(splittingAttributeNumber, statisticsBuilder);
         Node<N_S, B> child = getChild(example);
         child.updateStatistics(example);
     }
 
-    private void split(String splittingAttribute, B statisticsBuilder) {
-        this.splittingAttribute = splittingAttribute;
-        this.splittingValue = statistics.getSplittingValue(splittingAttribute);
+    private void split(int splittingAttributeNumber, B statisticsBuilder) {
+        this.splittingAttributeNumber = splittingAttributeNumber;
+        this.splittingValue = statistics.getSplittingValue(splittingAttributeNumber);
         this.leftChild = new Node<>(statisticsBuilder);
         this.rightChild = new Node<>(statisticsBuilder);
     }
@@ -98,7 +96,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     }
 
 
-    public String getMajorityClass() {
+    public int getMajorityClass() {
         return statistics.getMajorityClass();
     }
 

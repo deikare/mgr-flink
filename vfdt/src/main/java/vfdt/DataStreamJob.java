@@ -19,7 +19,7 @@
 package vfdt;
 
 import org.apache.flink.api.common.serialization.SimpleStringSchema;
-import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.utils.ParameterTool;
 import org.apache.flink.connector.base.DeliveryGuarantee;
 import org.apache.flink.connector.kafka.sink.KafkaRecordSerializationSchema;
@@ -32,6 +32,7 @@ import vfdt.classifiers.hoeffding.Node;
 import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
 import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
 import vfdt.inputs.Example;
+import vfdt.processors.coding.Encoder;
 import vfdt.processors.hoeffding.VfdtProcessFunction;
 import vfdt.sinks.LoggingSink;
 
@@ -53,10 +54,11 @@ import java.util.*;
  * method, change the respective entry in the POM.xml file (simply search for 'mainClass').
  */
 public class DataStreamJob {
-    public static Tuple2<LinkedList<Example>, HashSet<String>> readExamples(String filepath) throws FileNotFoundException {
+    public static Tuple3<LinkedList<Example>, HashSet<String>, HashMap<Integer, String>> readExamples(String filepath) throws FileNotFoundException {
 
         LinkedList<String> attributes = new LinkedList<>();
         LinkedList<Example> examples = new LinkedList<>();
+        Encoder encoder = new Encoder();
 
         try {
             File file = new File(filepath);
@@ -69,23 +71,22 @@ public class DataStreamJob {
             int n = attributesAsString.length - 1;
             attributes.addAll(Arrays.asList(attributesAsString).subList(0, n));
 
-
             while (scanner.hasNext()) {
                 line = scanner.nextLine();
 
                 String[] attributeValuesAsString = line.split(",");
-                HashMap<String, Double> attributesMap = new HashMap<>(n);
+                double[] attributesValues = new double[n];
                 for (int i = 0; i < n; i++) {
-                    attributesMap.put(attributesAsString[i], Double.parseDouble(attributeValuesAsString[i]));
+                    attributesValues[i] = Double.parseDouble(attributeValuesAsString[i]);
                 }
 
                 String className = attributeValuesAsString[n];
-                examples.add(new Example(className, attributesMap));
+                examples.add(new Example(encoder.encode(className), attributesValues));
             }
         } catch (FileNotFoundException | NumberFormatException e) {
             throw new RuntimeException(e);
         }
-        return new Tuple2<>(examples, new HashSet<>(attributes));
+        return new Tuple3<>(examples, new HashSet<>(attributes), encoder.decoder());
     }
 
     public static ParameterTool getVFDTOptions(long classesNumber, double delta, String attributes, double tau, long nMin, long batchStatLength) {
@@ -110,8 +111,9 @@ public class DataStreamJob {
         final String dataset = "elec";
         final String filepath = "/home/deikare/wut/streaming-datasets/" + dataset + ".csv";
 
-        Tuple2<LinkedList<Example>, HashSet<String>> data = readExamples(filepath);
+        Tuple3<LinkedList<Example>, HashSet<String>, HashMap<Integer, String>> data = readExamples(filepath);
         HashSet<String> attributes = data.f1; //protects from TupleSerialization error!
+        HashMap<Integer, String> decoder = data.f2;
 
         HashMap<String, String> options = new HashMap<>();
 
@@ -140,14 +142,14 @@ public class DataStreamJob {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50;
-                        long classesAmount = 2;
+                        long classesAmount = decoder.size();
 
-                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder) {
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes.size());
+                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes.size(), tau, nMin, statisticsBuilder) {
                             @Override
-                            protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                            protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                                 double threshold = 0.5;
-                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attribute)) / threshold;
+                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attributeNumber)) / threshold;
                             }
                         };
                     }

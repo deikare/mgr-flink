@@ -1,40 +1,40 @@
 package vfdt.inputs;
 
-import java.util.HashMap;
+import java.util.Arrays;
 
 public class Example {
-    private String className;
-    private HashMap<String, Double> attributes;
+    private int mappedClass;
+    private double[] attributes;
 
     public Example() {
     }
 
-    public Example(String className, HashMap<String, Double> attributes) {
-        this.className = className;
+    public Example(int mappedClass, double[] attributes) {
+        this.mappedClass = mappedClass;
         this.attributes = attributes;
     }
 
-    public String getClassName() {
-        return className;
+    public int getMappedClass() {
+        return mappedClass;
     }
 
-    public HashMap<String, Double> getAttributes() {
+    public double[] getAttributes() {
         return attributes;
     }
 
-    public void setClassName(String className) {
-        this.className = className;
+    public void setMappedClass(int mappedClass) {
+        this.mappedClass = mappedClass;
     }
 
-    public void setAttributes(HashMap<String, Double> attributes) {
+    public void setAttributes(double[] attributes) {
         this.attributes = attributes;
     }
 
     @Override
     public String toString() {
         return "Example{" +
-                "className='" + className + '\'' +
-                ", attributes=" + attributes +
+                "mappedClass='" + mappedClass + '\'' +
+                ", attributes=" + Arrays.toString(attributes) +
                 '}';
     }
 
