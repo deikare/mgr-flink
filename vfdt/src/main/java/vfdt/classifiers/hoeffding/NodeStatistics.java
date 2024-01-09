@@ -4,14 +4,18 @@ import vfdt.inputs.Example;
 
 import java.util.Arrays;
 
+import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
+
 public class NodeStatistics implements StatisticsInterface {
     private long n;
 
-    private final long[] classCounts;
+    private final Long[] classCounts;
 
     public NodeStatistics(int classNumber) {
         n = 0;
-        classCounts = new long[classNumber];
+        classCounts = new Long[classNumber];
+        for (int i = 0; i < classNumber; i++)
+            classCounts[i] = 0L;
     }
 
     public void update(Example example) {
@@ -21,16 +25,7 @@ public class NodeStatistics implements StatisticsInterface {
 
     @Override
     public int getMajorityClass() {
-        int majorityClass = 0;
-        long majorityCount = classCounts[0];
-
-        for (int i = 1; i < classCounts.length; i++) {
-            if (classCounts[i] > majorityCount) {
-                majorityClass = i;
-                majorityCount = classCounts[i];
-            }
-        }
-        return majorityClass;
+        return getIndexOfHighestValue(classCounts);
     }
 
     @Override
