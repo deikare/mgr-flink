@@ -3,6 +3,7 @@ package vfdt.classifiers.dwm.classic;
 import org.apache.flink.api.java.tuple.Tuple2;
 import vfdt.classifiers.base.BaseClassifierClassifyAndTrain;
 import vfdt.classifiers.dwm.DwmClassifierFields;
+import vfdt.classifiers.helpers.Helpers;
 import vfdt.inputs.Example;
 
 import java.time.Instant;
@@ -11,6 +12,7 @@ import java.util.*;
 import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
 public abstract class DynamicWeightedMajority<C extends ClassifierInterface> extends BaseClassifierClassifyAndTrain {
+    //todo try to only train new classifiers on n new samples, without classification
     protected final double beta;
     protected final double threshold;
     protected final int classNumber;
@@ -34,8 +36,8 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
             if (predictedClass != example.getMappedClass()) {
                 Instant start = Instant.now();
-                classifiersWithWeights.add(createClassifierWithWeight());
-                normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, toNow(start)));
+                classifiersWithWeights.add(createClassifierWithWeight(example));
+                normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, Helpers.toNow(start)));
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADDED_CLASSIFIERS_COUNT, 1L));
             }
             performances.addAll(normalizationAndDeletePerformances);
@@ -61,7 +63,7 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             } else classifierIterator.set(classifierAndWeight);
         }
 
-        performances.add(Tuple2.of(DwmClassifierFields.WEIGHTS_NORMALIZATION_AND_CLASSIFIER_DELETE_DURATION, toNow(start)));
+        performances.add(Tuple2.of(DwmClassifierFields.WEIGHTS_NORMALIZATION_AND_CLASSIFIER_DELETE_DURATION, Helpers.toNow(start)));
         performances.add(Tuple2.of(DwmClassifierFields.DELETED_CLASSIFIERS_COUNT, deletedCount));
 
         return performances;
@@ -71,10 +73,7 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
     protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example) {
         sampleNumber++;
 
-        Double[] votesForEachClass = new Double[classNumber];
-        for (int i = 0; i < classNumber; i++) {
-            votesForEachClass[i] = 0.0;
-        }
+        Double[] votesForEachClass = initializeVoteForEachClass();
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
         ListIterator<Tuple2<C, Double>> classifiersIterator = classifiersWithWeights.listIterator();
 
@@ -100,6 +99,8 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             }
         }
 
+        int predicted = getIndexOfHighestValue(votesForEachClass);
+
         ListIterator<Tuple2<String, Long>> classifyResultsIterator = globalClassifyResults.listIterator();
         while (classifyResultsIterator.hasNext()) {
             Tuple2<String, Long> measurement = classifyResultsIterator.next();
@@ -107,14 +108,21 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             classifyResultsIterator.set(measurement);
         }
 
-        int predicted = getIndexOfHighestValue(votesForEachClass);
-
         return Tuple2.of(predicted, globalClassifyResults);
     }
 
-    protected Tuple2<C, Double> createClassifierWithWeight() {
-        return Tuple2.of(createClassifier(), 1.0);
+    protected Double[] initializeVoteForEachClass() {
+        Double[] result = new Double[classNumber];
+        for (int i = 0; i < classNumber; i++) {
+            result[i] = 0.0;
+        }
+
+        return result;
     }
 
-    protected abstract C createClassifier();
+    protected Tuple2<C, Double> createClassifierWithWeight(Example example) {
+        return Tuple2.of(createClassifier(example), 1.0);
+    }
+
+    protected abstract C createClassifier(Example example);
 }
