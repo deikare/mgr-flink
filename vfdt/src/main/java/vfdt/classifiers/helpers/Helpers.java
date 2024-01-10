@@ -1,5 +1,8 @@
 package vfdt.classifiers.helpers;
 
+import java.time.Duration;
+import java.time.Instant;
+
 public class Helpers {
     public static <A extends Comparable<A>> int getIndexOfHighestValue(A[] tab) {
         int resultIndex = 0;
@@ -14,5 +17,13 @@ public class Helpers {
         }
 
         return resultIndex;
+    }
+
+    public static long toNow(Instant start) {
+        return Duration.between(start, Instant.now()).toNanos();
+    }
+
+    public static String timestampTrailingZeros(Instant start) {
+        return start.getEpochSecond() + String.format("%09d", start.getNano());
     }
 }

@@ -4,10 +4,9 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import vfdt.classifiers.base.BaseClassifierTrainAndClassify;
+import vfdt.classifiers.helpers.Helpers;
 import vfdt.inputs.Example;
 
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.time.Instant;
 import java.util.*;
 
@@ -145,7 +144,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
             result = result.getChild(example);
         }
         performances.add(Tuple2.of(HoeffdingTreeFields.NODES_DURING_TRAVERSAL_COUNT, count));
-        performances.add(Tuple2.of(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, toNow(start)));
+        performances.add(Tuple2.of(HoeffdingTreeFields.DURING_TRAVERSAL_DURATION, Helpers.toNow(start)));
         return result;
     }
 
