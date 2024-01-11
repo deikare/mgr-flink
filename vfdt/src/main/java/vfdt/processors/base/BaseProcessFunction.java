@@ -29,6 +29,7 @@ public abstract class BaseProcessFunction<C extends BaseClassifier> extends Keye
         C classifier = classifierState.value();
         if (classifier == null)
             classifier = createClassifier();
+        //todo add classifier startup n first samples - dont emit messages or emit only training messages
 
         Tuple4<String, Integer, ArrayList<Tuple2<String, Long>>, C> results = processExample(example, classifier);
         classifierState.update(results.f3);
