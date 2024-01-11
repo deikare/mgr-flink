@@ -27,12 +27,15 @@ import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.classifiers.base.BaseClassifierTags;
+import vfdt.classifiers.dwm.classic.DynamicWeightedMajority;
+import vfdt.classifiers.dwm.classifiers.bayes.naive.GaussianNaiveBayesClassifier;
 import vfdt.classifiers.hoeffding.HoeffdingTree;
 import vfdt.classifiers.hoeffding.Node;
 import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
 import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
 import vfdt.inputs.Example;
 import vfdt.processors.coding.Encoder;
+import vfdt.processors.dwm.ClassicDwmProcessFunction;
 import vfdt.processors.hoeffding.VfdtProcessFunction;
 import vfdt.sinks.LoggingSink;
 
@@ -108,9 +111,6 @@ public class DataStreamJob {
     }
 
     public static void main(String[] args) throws Exception {
-
-        // Sets up the execution environment, which is the main entry point
-        // to building Flink applications.
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
         final String dataset = "elec";
@@ -139,7 +139,7 @@ public class DataStreamJob {
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
-        DataStream<String> stream = env.fromCollection(data.f0)
+        DataStream<String> vfdtStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
                 .process(new VfdtProcessFunction("vfdt", dataset) {
                     @Override
@@ -159,33 +159,34 @@ public class DataStreamJob {
                         };
                     }
                 })
-                .name("process-examples");
+                .name("process-examples-vfdt");
 
 
-        stream.addSink(new LoggingSink()).name("logging-sink");
-        stream.sinkTo(kafkaSink).name("kafka-sink");
+        vfdtStream.addSink(new LoggingSink()).name("logging-sink-vfdt");
+        vfdtStream.sinkTo(kafkaSink).name("kafka-sink-vfdt");
 
-        /*
-         * Here, you can start creating your execution plan for Flink.
-         *
-         * Start with getting some data from the environment, like
-         * 	env.fromSequence(1, 10);
-         *
-         * then, transform the resulting DataStream<Long> using operations
-         * like
-         * 	.filter()
-         * 	.flatMap()
-         * 	.window()
-         * 	.process()
-         *
-         * and many more.
-         * Have a look at the programming guide:
-         *
-         * https://nightlies.apache.org/flink/flink-docs-stable/
-         *
-         */
+        DataStream<String> dwmStream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new ClassicDwmProcessFunction("classicDwm", dataset) {
+                    @Override
+                    protected DynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
+                        int classNumber = decoder.size();
+                        double beta = 0.5;
+                        double threshold = 0.4;
+                        int updateClassifiersEachSamples = 20;
+                        return new DynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
+                            @Override
+                            protected GaussianNaiveBayesClassifier createClassifier() {
+                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
+                            }
+                        };
+                    }
+                }).name("process-examples-dwm");
 
-        // Execute program, beginning computation.
+
+        dwmStream.addSink(new LoggingSink()).name("logging-sink-dwm");
+        dwmStream.sinkTo(kafkaSink).name("kafka-sink-dwm");
+
         env.execute("Flink Java API Skeleton");
     }
 }

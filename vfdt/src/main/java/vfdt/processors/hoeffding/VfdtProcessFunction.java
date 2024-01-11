@@ -17,6 +17,6 @@ public abstract class VfdtProcessFunction extends BaseProcessFunctionTrainAndCla
     protected void registerClassifier() {
         TypeInformation<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> classifierInfo = TypeInformation.of(new TypeHint<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>>() {
         });
-        classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("classifier", classifierInfo));
+        classifierState = getRuntimeContext().getState(new ValueStateDescriptor<>("vfdtClassifier", classifierInfo));
     }
 }
