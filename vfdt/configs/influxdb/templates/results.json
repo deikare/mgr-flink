@@ -3,7 +3,7 @@
     "apiVersion": "influxdata.com/v2alpha1",
     "kind": "Dashboard",
     "metadata": {
-      "name": "interesting-sutherland-7ab001"
+      "name": "rusty-banzai-873001"
     },
     "spec": {
       "charts": [
@@ -56,7 +56,7 @@
           "position": "overlaid",
           "queries": [
             {
-              "query": "from(bucket: \"data\")\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\")\n    |> filter(\n        fn: (r) =>\n            r[\"_field\"]\n                ==\n                \"classificationDuration\",\n    )\n    |> group(columns: [\"jobId\", \"params\"])\n    |> sort(columns: [\"_time\"])\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                params: r.params,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1.0 else 0.0,\n                tmp: 1.0\n            }),\n    )\n//     |> group(columns: [\"jobId\"])\n    |> cumulativeSum(columns: [\"tmp\", \"_value\"])\n    |> map(fn: (r) => ({_time: r._time, jobId: r.jobId, params: r.params, _value: 100.0 * r._value / r.tmp}))"
+              "query": "from(bucket: \"data\")\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\")\n    |> filter(\n        fn: (r) =>\n            r[\"_field\"]\n                ==\n                \"classificationDuration\",\n    )\n    |> group(columns: [\"jobId\", \"name\", \"params\"])\n    |> sort(columns: [\"_time\"])\n    |> map(\n        fn: (r) =>\n            ({  r with\n                _value: if r[\"class\"] == r[\"predicted\"] then 1.0 else 0.0,\n                tmp: 1.0\n            }),\n    )\n    |> cumulativeSum(columns: [\"tmp\", \"_value\"])\n    |> map(fn: (r) => ({r with _value: 100.0 * r._value / r.tmp}))\n    |> drop(columns: [\"tmp\"])"
             }
           ],
           "staticLegend": {
@@ -70,6 +70,68 @@
           "widthRatio": 1,
           "xCol": "_time",
           "yCol": "_value"
+        },
+        {
+          "axes": [
+            {
+              "base": "10",
+              "name": "x",
+              "scale": "linear"
+            },
+            {
+              "base": "10",
+              "name": "y",
+              "scale": "linear"
+            }
+          ],
+          "colorizeRows": true,
+          "colors": [
+            {
+              "id": "azGp65noAPl1OtK25c1LD",
+              "name": "Nineteen Eighty Four",
+              "type": "scale",
+              "hex": "#31C0F6"
+            },
+            {
+              "id": "Np32B_EwxOmy6xlkU0uuN",
+              "name": "Nineteen Eighty Four",
+              "type": "scale",
+              "hex": "#A500A5"
+            },
+            {
+              "id": "f9rgm7MRY4J7_7jOWS3po",
+              "name": "Nineteen Eighty Four",
+              "type": "scale",
+              "hex": "#FF7E27"
+            }
+          ],
+          "geom": "line",
+          "height": 6,
+          "hoverDimension": "auto",
+          "kind": "Xy",
+          "legendColorizeRows": true,
+          "legendOpacity": 1,
+          "legendOrientationThreshold": 100000000,
+          "name": "Walking accuracy without time",
+          "opacity": 1,
+          "orientationThreshold": 100000000,
+          "position": "overlaid",
+          "queries": [
+            {
+              "query": "from(bucket: \"data\")\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\")\n    |> filter(\n        fn: (r) =>\n            r[\"_field\"]\n                ==\n                \"classificationDuration\",\n    )\n    |> group(columns: [\"jobId\", \"name\", \"params\"])\n    |> sort(columns: [\"_time\"])\n    |> map(\n        fn: (r) =>\n            ({  r with\n                _time: 1,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1.0 else 0.0,\n                tmp: 1.0\n            }),\n    )\n    |> cumulativeSum(columns: [\"_time\", \"tmp\", \"_value\"])\n    |> map(fn: (r) => ({r with _value: 100.0 * r._value / r.tmp}))\n    |> drop(columns: [\"tmp\"])\n    |> limit(n: 50000)"
+            }
+          ],
+          "staticLegend": {
+            "colorizeRows": true,
+            "opacity": 1,
+            "orientationThreshold": 100000000,
+            "widthRatio": 1
+          },
+          "width": 12,
+          "widthRatio": 1,
+          "xCol": "_time",
+          "yCol": "_value",
+          "yPos": 6
         },
         {
           "colors": [
