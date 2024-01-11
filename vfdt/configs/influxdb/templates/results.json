@@ -3,7 +3,7 @@
     "apiVersion": "influxdata.com/v2alpha1",
     "kind": "Dashboard",
     "metadata": {
-      "name": "rustling-nobel-48d001"
+      "name": "interesting-sutherland-7ab001"
     },
     "spec": {
       "charts": [
@@ -56,7 +56,7 @@
           "position": "overlaid",
           "queries": [
             {
-              "query": "from(bucket: \"data\")\n    |> range(start: -inf)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\")\n    |> filter(\n        fn: (r) =>\n            r[\"_field\"]\n                ==\n                \"classificationDuration\",\n    )\n    |> group(columns: [\"jobId\"])\n    |> sort(columns: [\"_time\"])\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1.0 else 0.0,\n                tmp: 1.0\n            }),\n    )\n//     |> group(columns: [\"jobId\"])\n    |> cumulativeSum(columns: [\"tmp\", \"_value\"])\n    |> map(fn: (r) => ({_time: r._time, jobId: r.jobId, _value: 100.0 * r._value / r.tmp}))"
+              "query": "from(bucket: \"data\")\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\")\n    |> filter(\n        fn: (r) =>\n            r[\"_field\"]\n                ==\n                \"classificationDuration\",\n    )\n    |> group(columns: [\"jobId\", \"params\"])\n    |> sort(columns: [\"_time\"])\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                params: r.params,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1.0 else 0.0,\n                tmp: 1.0\n            }),\n    )\n//     |> group(columns: [\"jobId\"])\n    |> cumulativeSum(columns: [\"tmp\", \"_value\"])\n    |> map(fn: (r) => ({_time: r._time, jobId: r.jobId, params: r.params, _value: 100.0 * r._value / r.tmp}))"
             }
           ],
           "staticLegend": {
@@ -80,34 +80,12 @@
               "hex": "#ffffff"
             }
           ],
-          "fieldOptions": [
-            {
-              "displayName": "jobId",
-              "fieldName": "jobId",
-              "visible": true
-            },
-            {
-              "displayName": "avg",
-              "fieldName": "avg",
-              "visible": true
-            },
-            {
-              "displayName": "jobId",
-              "fieldName": "jobId",
-              "visible": true
-            },
-            {
-              "displayName": "accuracy",
-              "fieldName": "accuracy",
-              "visible": true
-            }
-          ],
           "height": 4,
           "kind": "Table",
           "name": "Accuracies",
           "queries": [
             {
-              "query": "from(bucket: \"data\")\n    |> range(start: -inf)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\" and r[\"_field\"] == \"classificationDuration\")\n    |> group(columns: [\"jobId\"])\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1 else 0,\n            }),\n    )\n    |> group(columns: [\"jobId\"])\n    |> reduce(\n        fn: (r, accumulator) =>\n            ({\n                count: accumulator.count + 1,\n                total: accumulator.total + r._value,\n                accuracy: float(v: accumulator.total + r._value) / float(v: accumulator.count + 1),\n            }),\n        identity: {count: 0, total: 0, accuracy: 0.0},\n    )\n    |> keep(columns: [\"jobId\", \"accuracy\"])\n    |> group()\n    |> sort(columns: [\"accuracy\"], desc: true)"
+              "query": "from(bucket: \"data\")\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\" and r[\"_field\"] == \"classificationDuration\")\n    |> map(\n        fn: (r) =>\n            ({\n                _time: r._time,\n                jobId: r.jobId,\n                name: r.name,\n                params: r.params,\n                _value: if r[\"class\"] == r[\"predicted\"] then 1 else 0,\n            }),\n    )\n    |> group(columns: [\"jobId\", \"name\", \"params\"])\n    |> reduce(\n        fn: (r, accumulator) =>\n            ({\n                count: accumulator.count + 1,\n                total: accumulator.total + r._value,\n                accuracy: float(v: accumulator.total + r._value) / float(v: accumulator.count + 1),\n            }),\n        identity: {count: 0, total: 0, accuracy: 0.0},\n    )\n    |> keep(columns: [\"jobId\", \"name\", \"params\", \"accuracy\"])\n    |> group()\n    |> sort(columns: [\"accuracy\"], desc: true)"
             }
           ],
           "staticLegend": {},
@@ -149,7 +127,7 @@
           "name": "Jobs history",
           "queries": [
             {
-              "query": "from(bucket: \"data\")\n    |> range(start: -inf)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\" and r[\"_field\"] == \"classificationDuration\")\n    |> group(columns: [\"jobId\"])\n    |> keep(columns: [\"_time\", \"jobId\"])\n    |> sort(columns: [\"_time\"])\n    |> limit(n: 1)\n    |> group() //so it merges streams for each jobId into one stream\n    |> sort(columns: [\"_time\"], desc: true)\n    |> rename(columns: {\"_time\": \"started\"})"
+              "query": "from(bucket: \"data\")\n    |> range(start: v.timeRangeStart)\n    |> filter(fn: (r) => r[\"_measurement\"] == \"classifierResult\" and r[\"_field\"] == \"classificationDuration\")\n    |> group(columns: [\"jobId\"])\n    |> keep(columns: [\"_time\", \"jobId\"])\n    |> sort(columns: [\"_time\"])\n    |> limit(n: 1)\n    |> group() //so it merges streams for each jobId into one stream\n    |> sort(columns: [\"_time\"], desc: true)\n    |> rename(columns: {\"_time\": \"started\"})"
             }
           ],
           "staticLegend": {},
