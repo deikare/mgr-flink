@@ -172,8 +172,8 @@ public class DataStreamJob {
                     protected DynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
                         int classNumber = decoder.size();
                         double beta = 0.5;
-                        double threshold = 0.2;
-                        int updateClassifiersEachSamples = 100;
+                        double threshold = 0.05;
+                        int updateClassifiersEachSamples = 10;
                         return new DynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
                             @Override
                             protected GaussianNaiveBayesClassifier createClassifier() {
