@@ -44,12 +44,17 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             performances.addAll(normalizationAndDeletePerformances);
         }
 
-        //todo add performances
         for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
             Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
-            classifierAndWeight.f0.train(example);
+            ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifierAndWeight.f0.train(example);
+
+            updateGlobalWithLocalPerformances(localClassifierPerformances, performances);
+
             classifiersWithWeights.set(classifierIndex, classifierAndWeight);
         }
+
+        averagePerformanceByLocalClassifier(performances, classifiersWithWeights.size());
+
         return performances;
     }
 
@@ -66,7 +71,7 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             Tuple2<C, Double> classifierAndWeight = classifierIterator.next();
             classifierAndWeight.f1 /= weightsSum;
             if (classifierAndWeight.f1 < threshold) {
-                classifierIterator.remove(); // todo think - when delete it imbalances weight normalization - probably not, because voting ratio stays the same
+                classifierIterator.remove();
                 deletedCount++;
             } else classifierIterator.set(classifierAndWeight);
         }
@@ -89,10 +94,13 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
 
         int predicted;
 
+        int usedClassifiersCount;
+
         if (sampleNumber == 1L) {
             predicted = example.getMappedClass();
+            usedClassifiersCount = 1;
         } else {
-            int usedClassifiersCount = 0;
+            usedClassifiersCount = 0;
             Double[] votesForEachClass = initializeVoteForEachClass();
 
             for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
@@ -103,34 +111,48 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
                     Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
                     ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
 
-                    for (int i = 0; i < classifyMeasurements.size(); i++) {
-                        if (i >= globalClassifyResults.size())
-                            globalClassifyResults.add(classifyMeasurements.get(i));
-                        else {
-                            Tuple2<String, Long> measurementFromGlobal = globalClassifyResults.get(i);
-                            measurementFromGlobal.f1 += classifyMeasurements.get(i).f1;
-                            globalClassifyResults.set(i, measurementFromGlobal);
-                        }
+                    updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
 
-                        int classNumber = classifyResults.f0;
-                        if (classNumber != example.getMappedClass() && sampleNumber % updateClassifiersEachSamples == 0)
-                            classifierAndWeight.f1 *= beta;
-                        votesForEachClass[classNumber] += classifierAndWeight.f1;
-                        classifiersWithWeights.set(classifierIndex, classifierAndWeight);
-                    }
+                    updateWeightsAndVotes(example, classifyResults.f0, classifierAndWeight, votesForEachClass);
+
+                    classifiersWithWeights.set(classifierIndex, classifierAndWeight);
                 }
             }
 
             predicted = getIndexOfHighestValue(votesForEachClass);
 
-            for (int resultIndex = 0; resultIndex < globalClassifyResults.size(); resultIndex++) {
-                Tuple2<String, Long> measurement = globalClassifyResults.get(resultIndex);
-                measurement.f1 /= usedClassifiersCount;
-                globalClassifyResults.set(resultIndex, measurement);
-            }
+            averagePerformanceByLocalClassifier(globalClassifyResults, usedClassifiersCount);
         }
 
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.USED_CLASSIFIERS_AMOUNT_IN_CLASSIFICATION, Integer.toUnsignedLong(usedClassifiersCount)));
+
         return Tuple2.of(predicted, globalClassifyResults);
+    }
+
+    private static void averagePerformanceByLocalClassifier(ArrayList<Tuple2<String, Long>> globalClassifyResults, int usedClassifiersCount) {
+        for (int resultIndex = 0; resultIndex < globalClassifyResults.size(); resultIndex++) {
+            Tuple2<String, Long> measurement = globalClassifyResults.get(resultIndex);
+            measurement.f1 /= usedClassifiersCount;
+            globalClassifyResults.set(resultIndex, measurement);
+        }
+    }
+
+    private void updateWeightsAndVotes(Example example, int classNumber, Tuple2<C, Double> classifierAndWeight, Double[] votesForEachClass) {
+        if (classNumber != example.getMappedClass() && sampleNumber % updateClassifiersEachSamples == 0)
+            classifierAndWeight.f1 *= beta;
+        votesForEachClass[classNumber] += classifierAndWeight.f1;
+    }
+
+    protected static void updateGlobalWithLocalPerformances(ArrayList<Tuple2<String, Long>> performances, ArrayList<Tuple2<String, Long>> globalClassifyResults) {
+        for (int localMeasurementIndex = 0; localMeasurementIndex < performances.size(); localMeasurementIndex++) {
+            if (localMeasurementIndex >= globalClassifyResults.size())
+                globalClassifyResults.add(performances.get(localMeasurementIndex));
+            else {
+                Tuple2<String, Long> measurementFromGlobal = globalClassifyResults.get(localMeasurementIndex);
+                measurementFromGlobal.f1 += performances.get(localMeasurementIndex).f1;
+                globalClassifyResults.set(localMeasurementIndex, measurementFromGlobal);
+            }
+        }
     }
 
     protected Double[] initializeVoteForEachClass() {
