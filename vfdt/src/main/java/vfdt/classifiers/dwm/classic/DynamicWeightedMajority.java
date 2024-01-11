@@ -12,6 +12,7 @@ import java.util.*;
 import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
 public abstract class DynamicWeightedMajority<C extends ClassifierInterface> extends BaseClassifierClassifyAndTrain {
+    //todo try to first train then classify
     //todo try to only train new classifiers on n new samples, without classification
     protected final double beta;
     protected final double threshold;
@@ -36,11 +37,18 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
             if (predictedClass != example.getMappedClass()) {
                 Instant start = Instant.now();
-                classifiersWithWeights.add(createClassifierWithWeight(example));
+                classifiersWithWeights.add(createClassifierWithWeight());
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, Helpers.toNow(start)));
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADDED_CLASSIFIERS_COUNT, 1L));
             }
             performances.addAll(normalizationAndDeletePerformances);
+        }
+
+        //todo add performances
+        for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
+            Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+            classifierAndWeight.f0.train(example);
+            classifiersWithWeights.set(classifierIndex, classifierAndWeight);
         }
         return performances;
     }
@@ -70,42 +78,56 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
     }
 
     @Override
+    public String generateClassifierParams() {
+        return "b" + beta + "_t" + threshold + "_u" + updateClassifiersEachSamples;
+    }
+
+    @Override
     protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example) {
         sampleNumber++;
-
-        Double[] votesForEachClass = initializeVoteForEachClass();
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
-        ListIterator<Tuple2<C, Double>> classifiersIterator = classifiersWithWeights.listIterator();
 
-        while (classifiersIterator.hasNext()) {
-            Tuple2<C, Double> classifierAndWeight = classifiersIterator.next();
-            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
-            ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
+        int predicted;
 
-            for (int i = 0; i < classifyMeasurements.size(); i++) {
-                if (i >= globalClassifyResults.size())
-                    globalClassifyResults.add(classifyMeasurements.get(i));
-                else {
-                    Tuple2<String, Long> measurementFromGlobal = globalClassifyResults.get(i);
-                    measurementFromGlobal.f1 += classifyMeasurements.get(i).f1;
-                    globalClassifyResults.set(i, measurementFromGlobal);
+        if (sampleNumber == 1L) {
+            predicted = example.getMappedClass();
+        } else {
+            int usedClassifiersCount = 0;
+            Double[] votesForEachClass = initializeVoteForEachClass();
+
+            for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
+                Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+                C classifier = classifierAndWeight.f0;
+                if (classifier.getSampleNumber() != 0) {
+                    usedClassifiersCount++;
+                    Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
+                    ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
+
+                    for (int i = 0; i < classifyMeasurements.size(); i++) {
+                        if (i >= globalClassifyResults.size())
+                            globalClassifyResults.add(classifyMeasurements.get(i));
+                        else {
+                            Tuple2<String, Long> measurementFromGlobal = globalClassifyResults.get(i);
+                            measurementFromGlobal.f1 += classifyMeasurements.get(i).f1;
+                            globalClassifyResults.set(i, measurementFromGlobal);
+                        }
+
+                        int classNumber = classifyResults.f0;
+                        if (classNumber != example.getMappedClass() && sampleNumber % updateClassifiersEachSamples == 0)
+                            classifierAndWeight.f1 *= beta;
+                        votesForEachClass[classNumber] += classifierAndWeight.f1;
+                        classifiersWithWeights.set(classifierIndex, classifierAndWeight);
+                    }
                 }
-
-                int classNumber = classifyResults.f0;
-                if (classNumber != example.getMappedClass() && sampleNumber % updateClassifiersEachSamples == 0)
-                    classifierAndWeight.f1 *= beta;
-                votesForEachClass[classNumber] += classifierAndWeight.f1;
-                classifiersIterator.set(classifierAndWeight);
             }
-        }
 
-        int predicted = getIndexOfHighestValue(votesForEachClass);
+            predicted = getIndexOfHighestValue(votesForEachClass);
 
-        ListIterator<Tuple2<String, Long>> classifyResultsIterator = globalClassifyResults.listIterator();
-        while (classifyResultsIterator.hasNext()) {
-            Tuple2<String, Long> measurement = classifyResultsIterator.next();
-            measurement.f1 /= classifiersWithWeights.size();
-            classifyResultsIterator.set(measurement);
+            for (int resultIndex = 0; resultIndex < globalClassifyResults.size(); resultIndex++) {
+                Tuple2<String, Long> measurement = globalClassifyResults.get(resultIndex);
+                measurement.f1 /= usedClassifiersCount;
+                globalClassifyResults.set(resultIndex, measurement);
+            }
         }
 
         return Tuple2.of(predicted, globalClassifyResults);
@@ -120,9 +142,9 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         return result;
     }
 
-    protected Tuple2<C, Double> createClassifierWithWeight(Example example) {
-        return Tuple2.of(createClassifier(example), 1.0);
+    protected Tuple2<C, Double> createClassifierWithWeight() {
+        return Tuple2.of(createClassifier(), 1.0);
     }
 
-    protected abstract C createClassifier(Example example);
+    protected abstract C createClassifier();
 }
