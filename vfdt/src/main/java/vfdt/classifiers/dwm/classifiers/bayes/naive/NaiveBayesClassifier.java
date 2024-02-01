@@ -23,11 +23,6 @@ public abstract class NaiveBayesClassifier implements ClassifierInterface {
     }
 
     @Override
-    public long getSampleNumber() {
-        return sampleNumber;
-    }
-
-    @Override
     public Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classify(Example example) {
         Instant start = Instant.now();
 
@@ -67,7 +62,7 @@ public abstract class NaiveBayesClassifier implements ClassifierInterface {
         int exampleClass = example.getMappedClass();
 
         classCounts.set(exampleClass, classCounts.get(exampleClass) + 1L);
-        
+
         return trainImplementation(example, start);
     }
 

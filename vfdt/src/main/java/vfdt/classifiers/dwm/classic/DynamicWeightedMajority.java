@@ -12,8 +12,6 @@ import java.util.*;
 import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
 public abstract class DynamicWeightedMajority<C extends ClassifierInterface> extends BaseClassifierClassifyAndTrain {
-    //todo try to first train then classify
-    //todo try to only train new classifiers on n new samples, without classification
     protected final double beta;
     protected final double threshold;
     protected final int classNumber;
@@ -64,6 +62,8 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
 
         averagePerformanceByLocalClassifier(performances, classifiersWithWeights.size());
 
+        performances.add(Tuple2.of(DwmClassifierFields.CLASSIFIERS_AFTER_TRAIN_COUNT, (long) classifiersWithWeights.size()));
+
         return performances;
     }
 
@@ -103,30 +103,25 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
 
         int predicted;
 
-        int usedClassifiersCount = 0;
         Double[] votesForEachClass = initializeVoteForEachClass();
 
         for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
             Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
             C classifier = classifierAndWeight.f0;
-            if (classifier.getSampleNumber() != 0) {
-                usedClassifiersCount++;
-                Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifier.classify(example);
-                ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
 
-                updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
+            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifier.classify(example);
+            ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
 
-                updateWeightsAndVotes(example, classifyResults.f0, classifierAndWeight, votesForEachClass);
+            updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
 
-                classifiersWithWeights.set(classifierIndex, classifierAndWeight);
-            }
+            updateWeightsAndVotes(example, classifyResults.f0, classifierAndWeight, votesForEachClass);
+
+            classifiersWithWeights.set(classifierIndex, classifierAndWeight);
         }
 
         predicted = getIndexOfHighestValue(votesForEachClass);
 
-        averagePerformanceByLocalClassifier(globalClassifyResults, usedClassifiersCount);
-
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.USED_CLASSIFIERS_AMOUNT_IN_CLASSIFICATION, Integer.toUnsignedLong(usedClassifiersCount)));
+        averagePerformanceByLocalClassifier(globalClassifyResults, classifiersWithWeights.size());
 
         return Tuple2.of(predicted, globalClassifyResults);
     }
