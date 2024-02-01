@@ -8,8 +8,8 @@ import vfdt.classifiers.dwm.classifiers.bayes.naive.GaussianNaiveBayesClassifier
 import vfdt.processors.base.BaseProcessFunctionClassifyAndTrain;
 
 public abstract class ClassicDwmProcessFunction extends BaseProcessFunctionClassifyAndTrain<DynamicWeightedMajority<GaussianNaiveBayesClassifier>> {
-    public ClassicDwmProcessFunction(String name, String dataset) {
-        super(name, dataset);
+    public ClassicDwmProcessFunction(String name, String dataset, long bootstrapSamplesLimit) {
+        super(name, dataset, bootstrapSamplesLimit);
     }
 
     @Override

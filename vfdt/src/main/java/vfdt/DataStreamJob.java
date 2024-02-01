@@ -127,6 +127,8 @@ public class DataStreamJob {
 
         env.getConfig().setGlobalJobParameters(ParameterTool.fromMap(options));
 
+        long bootstrapSamplesLimit = 100L;
+
 
         KafkaSink<String> kafkaSink = KafkaSink.<String>builder()
                 .setBootstrapServers("localhost:9092")
@@ -141,7 +143,7 @@ public class DataStreamJob {
 
         DataStream<String> vfdtStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new VfdtProcessFunction("vfdt", dataset) {
+                .process(new VfdtProcessFunction("vfdt", dataset, bootstrapSamplesLimit) {
                     @Override
                     protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
                         double delta = 0.05;
@@ -167,7 +169,7 @@ public class DataStreamJob {
 
         DataStream<String> dwmStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new ClassicDwmProcessFunction("classicDwm", dataset) {
+                .process(new ClassicDwmProcessFunction("classicDwm", dataset, bootstrapSamplesLimit) {
                     @Override
                     protected DynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
                         int classNumber = decoder.size();

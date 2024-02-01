@@ -32,6 +32,15 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
     }
 
     @Override
+    public void bootstrapTrainImplementation(Example example) {
+        for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
+            Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+            classifierAndWeight.f0.train(example);
+            classifiersWithWeights.set(classifierIndex, classifierAndWeight);
+        }
+    }
+
+    @Override
     protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
         if (sampleNumber % updateClassifiersEachSamples == 0) {
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
@@ -94,35 +103,28 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
 
         int predicted;
 
-        int usedClassifiersCount;
+        int usedClassifiersCount = 0;
+        Double[] votesForEachClass = initializeVoteForEachClass();
 
-        if (sampleNumber == 1L) {
-            predicted = example.getMappedClass();
-            usedClassifiersCount = 1;
-        } else {
-            usedClassifiersCount = 0;
-            Double[] votesForEachClass = initializeVoteForEachClass();
+        for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
+            Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+            C classifier = classifierAndWeight.f0;
+            if (classifier.getSampleNumber() != 0) {
+                usedClassifiersCount++;
+                Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifier.classify(example);
+                ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
 
-            for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
-                Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
-                C classifier = classifierAndWeight.f0;
-                if (classifier.getSampleNumber() != 0) {
-                    usedClassifiersCount++;
-                    Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
-                    ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
+                updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
 
-                    updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
+                updateWeightsAndVotes(example, classifyResults.f0, classifierAndWeight, votesForEachClass);
 
-                    updateWeightsAndVotes(example, classifyResults.f0, classifierAndWeight, votesForEachClass);
-
-                    classifiersWithWeights.set(classifierIndex, classifierAndWeight);
-                }
+                classifiersWithWeights.set(classifierIndex, classifierAndWeight);
             }
-
-            predicted = getIndexOfHighestValue(votesForEachClass);
-
-            averagePerformanceByLocalClassifier(globalClassifyResults, usedClassifiersCount);
         }
+
+        predicted = getIndexOfHighestValue(votesForEachClass);
+
+        averagePerformanceByLocalClassifier(globalClassifyResults, usedClassifiersCount);
 
         globalClassifyResults.add(Tuple2.of(DwmClassifierFields.USED_CLASSIFIERS_AMOUNT_IN_CLASSIFICATION, Integer.toUnsignedLong(usedClassifiersCount)));
 

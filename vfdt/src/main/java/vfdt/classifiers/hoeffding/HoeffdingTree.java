@@ -103,12 +103,18 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         return "r" + R + "_d" + delta + "_t" + tau + "_n" + nMin;
     }
 
-    protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example) throws RuntimeException {
+    @Override
+    public void bootstrapTrainImplementation(Example example) {
         n++;
-        ArrayList<Tuple2<String, Long>> trainingPerformances = new ArrayList<>();
-        Node<N_S, B> leaf = getLeaf(example, trainingPerformances);
-        logger.info("Training: " + example.toString());
+        Node<N_S, B> leaf = root;
 
+        while (!leaf.isLeaf())
+            leaf = leaf.getChild(example);
+
+        updateLeaf(example, leaf);
+    }
+
+    private void updateLeaf(Example example, Node<N_S, B> leaf) {
         leaf.updateStatistics(example);
 
         if (leaf.getN() > nMin) {
@@ -129,6 +135,15 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
                 leaf.split(pojo.attributeNumber, statisticsBuilder, example);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
+    }
+
+    protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example) throws RuntimeException {
+        n++;
+        ArrayList<Tuple2<String, Long>> trainingPerformances = new ArrayList<>();
+        Node<N_S, B> leaf = getLeaf(example, trainingPerformances);
+        logger.info("Training: " + example.toString());
+
+        updateLeaf(example, leaf);
 
         logger.info(leaf.getStatistics().toString());
 

@@ -9,8 +9,8 @@ import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
 import vfdt.processors.base.BaseProcessFunctionTrainAndClassify;
 
 public abstract class VfdtProcessFunction extends BaseProcessFunctionTrainAndClassify<HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>> {
-    public VfdtProcessFunction(String name, String dataset) {
-        super(name, dataset);
+    public VfdtProcessFunction(String name, String dataset, long bootstrapSamplesLimit) {
+        super(name, dataset, bootstrapSamplesLimit);
     }
 
     @Override
