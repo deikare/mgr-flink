@@ -67,8 +67,7 @@ public abstract class NaiveBayesClassifier implements ClassifierInterface {
         int exampleClass = example.getMappedClass();
 
         classCounts.set(exampleClass, classCounts.get(exampleClass) + 1L);
-
-
+        
         return trainImplementation(example, start);
     }
 
