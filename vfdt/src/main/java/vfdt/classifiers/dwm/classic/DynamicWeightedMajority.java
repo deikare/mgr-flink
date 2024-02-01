@@ -107,9 +107,8 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
 
         for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
             Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
-            C classifier = classifierAndWeight.f0;
 
-            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifier.classify(example);
+            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
             ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
 
             updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
