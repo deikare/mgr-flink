@@ -1,7 +1,6 @@
 package vfdt.classifiers.dwm.classifiers.bayes.naive;
 
 import org.apache.flink.api.java.tuple.Tuple2;
-import vfdt.classifiers.dwm.classic.ClassifierInterface;
 import vfdt.inputs.Example;
 
 import java.time.Instant;
@@ -10,63 +9,26 @@ import java.util.Collections;
 
 import static vfdt.classifiers.helpers.Helpers.toNow;
 
-public class GaussianNaiveBayesClassifier implements ClassifierInterface {
-    private long sampleNumber;
+public class GaussianNaiveBayesClassifier extends NaiveBayesClassifier {
+    ArrayList<ArrayList<Tuple2<Double, Double>>> attributeSumsForEachClass;
 
-    ArrayList<Tuple2<Long, ArrayList<Tuple2<Double, Double>>>> classCountAndAttributeSumsForEachClass;
 
     public GaussianNaiveBayesClassifier(int classesCount, int attributesCount) {
-        sampleNumber = 0L;
-        classCountAndAttributeSumsForEachClass = new ArrayList<>(classesCount);
+        super(classesCount);
+
+        attributeSumsForEachClass = new ArrayList<>(classesCount);
         for (int classNumber = 0; classNumber < classesCount; classNumber++) {
-            ArrayList<Tuple2<Double, Double>> attributeSums = new ArrayList<>(classesCount);
+            ArrayList<Tuple2<Double, Double>> attributeSums = new ArrayList<>(attributesCount);
             for (int attributeNumber = 0; attributeNumber < attributesCount; attributeNumber++) {
                 attributeSums.add(Tuple2.of(0.0, 0.0));
             }
-            classCountAndAttributeSumsForEachClass.add(Tuple2.of(0L, attributeSums));
+            attributeSumsForEachClass.add(attributeSums);
         }
     }
 
     @Override
-    public long getSampleNumber() {
-        return sampleNumber;
-    }
-
-
-    @Override
-    public Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classify(Example example) {
-        Instant start = Instant.now();
-
-        sampleNumber++;
-
-        int predictedClass = 0;
-        double maxProbability = 0.0;
-
-        double[] attributes = example.getAttributes();
-
-        for (int classNumber = 0; classNumber < classCountAndAttributeSumsForEachClass.size(); classNumber++) {
-            Tuple2<Long, ArrayList<Tuple2<Double, Double>>> classCountAndAttributesCounts = classCountAndAttributeSumsForEachClass.get(classNumber);
-            double classProbability = ((double) classCountAndAttributesCounts.f0) / ((double) (sampleNumber));
-
-            double multipliedProbability = 1.0;
-            for (int attributeNumber = 0; attributeNumber < attributes.length; attributeNumber++) {
-                double probability = attributeProbability(classCountAndAttributesCounts, attributeNumber, attributes);
-                multipliedProbability *= probability;
-            }
-
-            double probability = classProbability * multipliedProbability;
-            if (probability > maxProbability) {
-                predictedClass = classNumber;
-                maxProbability = probability;
-            }
-        }
-
-        return Tuple2.of(predictedClass, new ArrayList<>(Collections.singletonList(Tuple2.of(NaiveBayesFields.AVG_CLASSIFY_DURATION, toNow(start)))));
-    }
-
-
-    private double attributeProbability(Tuple2<Long, ArrayList<Tuple2<Double, Double>>> classCountAndAttributesCounts, int attributeNumber, double[] attributes) {
-        Tuple2<Double, Double> attributeSums = classCountAndAttributesCounts.f1.get(attributeNumber);
+    protected double attributeProbability(int classNumber, int attributeNumber, double[] attributes) {
+        Tuple2<Double, Double> attributeSums = attributeSumsForEachClass.get(classNumber).get(attributeNumber);
         double attribute = attributes[attributeNumber];
         double sum = attributeSums.f0 + attribute;
         double mean = sum / sampleNumber;
@@ -77,25 +39,21 @@ public class GaussianNaiveBayesClassifier implements ClassifierInterface {
     }
 
     @Override
-    public ArrayList<Tuple2<String, Long>> train(Example example) {
-        Instant start = Instant.now();
-
-        int exampleClass = example.getMappedClass();
-
-        Tuple2<Long, ArrayList<Tuple2<Double, Double>>> classCountAndAttributeSums = classCountAndAttributeSumsForEachClass.get(exampleClass);
-
-        classCountAndAttributeSums.f0++;
+    protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, Instant start) {
+        int classNumber = example.getMappedClass();
+        ArrayList<Tuple2<Double, Double>> attributeSums = attributeSumsForEachClass.get(classNumber);
 
         double[] attributes = example.getAttributes();
         for (int i = 0; i < attributes.length; i++) {
             double attributeValue = attributes[i];
-            Tuple2<Double, Double> attributeValueSums = classCountAndAttributeSums.f1.get(i);
+            Tuple2<Double, Double> attributeValueSums = attributeSums.get(i);
             attributeValueSums.f0 += attributeValue;
             attributeValueSums.f1 += Math.pow(attributeValue, 2.0);
-            classCountAndAttributeSums.f1.set(i, attributeValueSums);
+            attributeSums.set(i, attributeValueSums);
         }
 
-        classCountAndAttributeSumsForEachClass.set(exampleClass, classCountAndAttributeSums);
+        attributeSumsForEachClass.set(classNumber, attributeSums);
+
         return new ArrayList<>(Collections.singletonList(Tuple2.of(NaiveBayesFields.AVG_TRAIN_DURATION, toNow(start))));
     }
 }

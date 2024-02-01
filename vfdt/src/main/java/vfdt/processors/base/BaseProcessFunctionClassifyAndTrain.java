@@ -9,8 +9,8 @@ import vfdt.inputs.Example;
 import java.util.ArrayList;
 
 public abstract class BaseProcessFunctionClassifyAndTrain<C extends BaseClassifierClassifyAndTrain> extends BaseProcessFunction<C> {
-    public BaseProcessFunctionClassifyAndTrain(String name, String dataset) {
-        super(name, dataset);
+    public BaseProcessFunctionClassifyAndTrain(String name, String dataset, long bootstrapSamplesLimit) {
+        super(name, dataset, bootstrapSamplesLimit);
     }
 
     @Override
