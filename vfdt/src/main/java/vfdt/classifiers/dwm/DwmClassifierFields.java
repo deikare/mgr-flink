@@ -9,4 +9,5 @@ public class DwmClassifierFields {
     public final static String ADDED_CLASSIFIERS_COUNT = "addedClassifiersCount";
     public final static String ADD_CLASSIFIER_DURATION = "addClassifierDuration";
     public final static String CLASSIFIERS_AFTER_TRAIN_COUNT = "classifiersAfterTrainCount";
+    public final static String AVG_CLASSIFIER_TTL = "avgClassifierTTL";
 }
