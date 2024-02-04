@@ -102,6 +102,7 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
 
         int predicted;
+        int actualClass = example.getMappedClass();
 
         Double[] votesForEachClass = initializeVoteForEachClass();
 
@@ -109,11 +110,10 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
             Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
 
             Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
-            ArrayList<Tuple2<String, Long>> classifyMeasurements = classifyResults.f1;
 
-            updateGlobalWithLocalPerformances(classifyMeasurements, globalClassifyResults);
+            updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
 
-            updateWeightsAndVotes(example, classifyResults.f0, classifierAndWeight, votesForEachClass);
+            updateWeightsAndVotes(actualClass, classifyResults.f0, classifierAndWeight, votesForEachClass);
 
             classifiersWithWeights.set(classifierIndex, classifierAndWeight);
         }
@@ -133,20 +133,20 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         }
     }
 
-    private void updateWeightsAndVotes(Example example, int classNumber, Tuple2<C, Double> classifierAndWeight, Double[] votesForEachClass) {
-        if (classNumber != example.getMappedClass() && sampleNumber % updateClassifiersEachSamples == 0)
+    private void updateWeightsAndVotes(int actualClass, int predicted, Tuple2<C, Double> classifierAndWeight, Double[] votesForEachClass) {
+        if (predicted != actualClass && sampleNumber % updateClassifiersEachSamples == 0)
             classifierAndWeight.f1 *= beta;
-        votesForEachClass[classNumber] += classifierAndWeight.f1;
+        votesForEachClass[predicted] += classifierAndWeight.f1;
     }
 
-    protected static void updateGlobalWithLocalPerformances(ArrayList<Tuple2<String, Long>> performances, ArrayList<Tuple2<String, Long>> globalClassifyResults) {
-        for (int localMeasurementIndex = 0; localMeasurementIndex < performances.size(); localMeasurementIndex++) {
-            if (localMeasurementIndex >= globalClassifyResults.size())
-                globalClassifyResults.add(performances.get(localMeasurementIndex));
+    protected static void updateGlobalWithLocalPerformances(ArrayList<Tuple2<String, Long>> localPerformances, ArrayList<Tuple2<String, Long>> globalPerformances) {
+        for (int localMeasurementIndex = 0; localMeasurementIndex < localPerformances.size(); localMeasurementIndex++) {
+            if (localMeasurementIndex >= globalPerformances.size())
+                globalPerformances.add(localPerformances.get(localMeasurementIndex));
             else {
-                Tuple2<String, Long> measurementFromGlobal = globalClassifyResults.get(localMeasurementIndex);
-                measurementFromGlobal.f1 += performances.get(localMeasurementIndex).f1;
-                globalClassifyResults.set(localMeasurementIndex, measurementFromGlobal);
+                Tuple2<String, Long> measurementFromGlobal = globalPerformances.get(localMeasurementIndex);
+                measurementFromGlobal.f1 += localPerformances.get(localMeasurementIndex).f1;
+                globalPerformances.set(localMeasurementIndex, measurementFromGlobal);
             }
         }
     }
