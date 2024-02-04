@@ -1,6 +1,7 @@
 package vfdt.classifiers.dwm.classic;
 
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import vfdt.classifiers.base.BaseClassifierClassifyAndTrain;
 import vfdt.classifiers.dwm.DwmClassifierFields;
 import vfdt.classifiers.helpers.Helpers;
@@ -15,10 +16,10 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
     protected final double beta;
     protected final double threshold;
     protected final int classNumber;
-    protected int sampleNumber;
+    protected long sampleNumber;
     protected final int updateClassifiersEachSamples;
 
-    protected ArrayList<Tuple2<C, Double>> classifiersWithWeights;
+    protected ArrayList<Tuple3<C, Double, Long>> classifiersWithWeights;
 
     protected DynamicWeightedMajority(double beta, double threshold, int classNumber, int updateClassifiersEachSamples) {
         this.beta = beta;
@@ -26,13 +27,13 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         this.classNumber = classNumber;
         this.updateClassifiersEachSamples = updateClassifiersEachSamples;
         this.sampleNumber = 0;
-        this.classifiersWithWeights = new ArrayList<>(Collections.singletonList(createClassifierWithWeight()));
+        this.classifiersWithWeights = new ArrayList<>(Collections.singletonList(createClassifierWithWeight(1)));
     }
 
     @Override
     public void bootstrapTrainImplementation(Example example) {
         for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
-            Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+            Tuple3<C, Double, Long> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
             classifierAndWeight.f0.train(example);
             classifiersWithWeights.set(classifierIndex, classifierAndWeight);
         }
@@ -40,11 +41,12 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
 
     @Override
     protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
+        int actualClass = example.getMappedClass();
         if (sampleNumber % updateClassifiersEachSamples == 0) {
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
-            if (predictedClass != example.getMappedClass()) {
+            if (predictedClass != actualClass) {
                 Instant start = Instant.now();
-                classifiersWithWeights.add(createClassifierWithWeight());
+                classifiersWithWeights.add(createClassifierWithWeight(sampleNumber));
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, Helpers.toNow(start)));
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADDED_CLASSIFIERS_COUNT, 1L));
             }
@@ -52,7 +54,7 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         }
 
         for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
-            Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+            Tuple3<C, Double, Long> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
             ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifierAndWeight.f0.train(example);
 
             updateGlobalWithLocalPerformances(localClassifierPerformances, performances);
@@ -71,22 +73,27 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         ArrayList<Tuple2<String, Long>> performances = new ArrayList<>(2);
 
         double weightsSum = classifiersWithWeights.stream().mapToDouble(classifierAndWeight -> classifierAndWeight.f1).sum();
-        ListIterator<Tuple2<C, Double>> classifierIterator = classifiersWithWeights.listIterator();
+        ListIterator<Tuple3<C, Double, Long>> classifierIterator = classifiersWithWeights.listIterator();
         long deletedCount = 0;
+        long deletedTTL = 0;
 
         Instant start = Instant.now();
 
         while (classifierIterator.hasNext()) {
-            Tuple2<C, Double> classifierAndWeight = classifierIterator.next();
+            Tuple3<C, Double, Long> classifierAndWeight = classifierIterator.next();
             classifierAndWeight.f1 /= weightsSum;
             if (classifierAndWeight.f1 < threshold) {
                 classifierIterator.remove();
                 deletedCount++;
+                deletedTTL += sampleNumber - classifierAndWeight.f2;
             } else classifierIterator.set(classifierAndWeight);
         }
 
         performances.add(Tuple2.of(DwmClassifierFields.WEIGHTS_NORMALIZATION_AND_CLASSIFIER_DELETE_DURATION, Helpers.toNow(start)));
         performances.add(Tuple2.of(DwmClassifierFields.DELETED_CLASSIFIERS_COUNT, deletedCount));
+
+        if (deletedCount != 0)
+            performances.add(Tuple2.of(DwmClassifierFields.AVG_CLASSIFIER_TTL, deletedTTL / deletedCount));
 
         return performances;
     }
@@ -107,7 +114,7 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         Double[] votesForEachClass = initializeVoteForEachClass();
 
         for (int classifierIndex = 0; classifierIndex < classifiersWithWeights.size(); classifierIndex++) {
-            Tuple2<C, Double> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
+            Tuple3<C, Double, Long> classifierAndWeight = classifiersWithWeights.get(classifierIndex);
 
             Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.f0.classify(example);
 
@@ -133,10 +140,10 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         }
     }
 
-    private void updateWeightsAndVotes(int actualClass, int predicted, Tuple2<C, Double> classifierAndWeight, Double[] votesForEachClass) {
+    private void updateWeightsAndVotes(int actualClass, int predicted, Tuple3<C, Double, Long> classifierTuple, Double[] votesForEachClass) {
         if (predicted != actualClass && sampleNumber % updateClassifiersEachSamples == 0)
-            classifierAndWeight.f1 *= beta;
-        votesForEachClass[predicted] += classifierAndWeight.f1;
+            classifierTuple.f1 *= beta;
+        votesForEachClass[predicted] += classifierTuple.f1;
     }
 
     protected static void updateGlobalWithLocalPerformances(ArrayList<Tuple2<String, Long>> localPerformances, ArrayList<Tuple2<String, Long>> globalPerformances) {
@@ -160,8 +167,8 @@ public abstract class DynamicWeightedMajority<C extends ClassifierInterface> ext
         return result;
     }
 
-    protected Tuple2<C, Double> createClassifierWithWeight() {
-        return Tuple2.of(createClassifier(), 1.0);
+    protected Tuple3<C, Double, Long> createClassifierWithWeight(long sampleNumber) {
+        return Tuple3.of(createClassifier(), 1.0, sampleNumber);
     }
 
     protected abstract C createClassifier();
