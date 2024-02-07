@@ -27,8 +27,9 @@ import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.classifiers.base.BaseClassifierTags;
-import vfdt.classifiers.dwm.classic.DynamicWeightedMajority;
+import vfdt.classifiers.dwm.classic.ClassicDynamicWeightedMajority;
 import vfdt.classifiers.dwm.classifiers.bayes.naive.GaussianNaiveBayesClassifier;
+import vfdt.classifiers.dwm.extended.ExtendedDynamicWeightedMajority;
 import vfdt.classifiers.hoeffding.HoeffdingTree;
 import vfdt.classifiers.hoeffding.Node;
 import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
@@ -36,6 +37,7 @@ import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
 import vfdt.inputs.Example;
 import vfdt.processors.coding.Encoder;
 import vfdt.processors.dwm.ClassicDwmProcessFunction;
+import vfdt.processors.dwm.ExtendedDwmProcessFunction;
 import vfdt.processors.hoeffding.VfdtProcessFunction;
 import vfdt.sinks.LoggingSink;
 
@@ -97,19 +99,6 @@ public class DataStreamJob {
         return new Tuple3<>(examples, new HashSet<>(attributes), encoder.decoder());
     }
 
-    public static ParameterTool getVFDTOptions(long classesNumber, double delta, String attributes, double tau, long nMin, long batchStatLength) {
-        HashMap<String, String> options = new HashMap<>();
-
-        options.put("classesNumber", String.valueOf(classesNumber));
-        options.put("delta", String.valueOf(delta));
-        options.put("attributes", attributes);
-        options.put("tau", String.valueOf(tau));
-        options.put("nMin", String.valueOf(nMin));
-        options.put("batchStatLength", String.valueOf(batchStatLength));
-
-        return ParameterTool.fromMap(options);
-    }
-
     public static void main(String[] args) throws Exception {
         final StreamExecutionEnvironment env = StreamExecutionEnvironment.getExecutionEnvironment();
 
@@ -167,27 +156,48 @@ public class DataStreamJob {
         vfdtStream.addSink(new LoggingSink()).name("logging-sink-vfdt");
         vfdtStream.sinkTo(kafkaSink).name("kafka-sink-vfdt");
 
-        DataStream<String> dwmStream = env.fromCollection(data.f0)
+        DataStream<String> classicDwmStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
                 .process(new ClassicDwmProcessFunction("classicDwm", dataset, bootstrapSamplesLimit) {
                     @Override
-                    protected DynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
+                    protected ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
                         int classNumber = decoder.size();
                         double beta = 0.5;
                         double threshold = 0.01;
                         int updateClassifiersEachSamples = 10;
-                        return new DynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
+                        return new ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
                             @Override
                             protected GaussianNaiveBayesClassifier createClassifier() {
                                 return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
                             }
                         };
                     }
-                }).name("process-examples-dwm");
+                }).name("process-examples-classic-dwm");
 
+        classicDwmStream.addSink(new LoggingSink()).name("logging-sink-classic-dwm");
+        classicDwmStream.sinkTo(kafkaSink).name("kafka-sink-classic-dwm");
 
-        dwmStream.addSink(new LoggingSink()).name("logging-sink-dwm");
-        dwmStream.sinkTo(kafkaSink).name("kafka-sink-dwm");
+        DataStream<String> extendedDwmStream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new ExtendedDwmProcessFunction("extendedDwm", dataset, bootstrapSamplesLimit) {
+                    @Override
+                    protected ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
+                        int classNumber = decoder.size();
+                        double beta = 0.5;
+                        double threshold = 0.01;
+                        int updateClassifiersEachSamples = 10;
+
+                        return new ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
+                            @Override
+                            protected GaussianNaiveBayesClassifier createClassifier() {
+                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
+                            }
+                        };
+                    }
+                }).name("process-examples-extended-dwm");
+
+        extendedDwmStream.addSink(new LoggingSink()).name("logging-sink-extended-dwm");
+        extendedDwmStream.sinkTo(kafkaSink).name("kafka-sink-extended-dwm");
 
         env.execute("Flink Java API Skeleton");
     }
