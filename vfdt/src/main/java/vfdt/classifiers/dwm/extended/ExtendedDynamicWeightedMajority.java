@@ -29,6 +29,7 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
     protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
         int actualClass = example.getMappedClass();
         if (anyWeightChanged) {
+            anyWeightChanged = false;
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
             if (predictedClass != actualClass) {
                 Instant start = Instant.now();
@@ -37,7 +38,6 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADDED_CLASSIFIERS_COUNT, 1L));
             }
             performances.addAll(normalizationAndDeletePerformances);
-            anyWeightChanged = false;
         }
 
         for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
