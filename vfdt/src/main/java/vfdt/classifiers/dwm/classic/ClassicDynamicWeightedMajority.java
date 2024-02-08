@@ -22,7 +22,6 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
     protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
         int actualClass = example.getMappedClass();
         if (sampleNumber % updateClassifiersEachSamples == 0) {
-            sampleNumber = 0L;
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
             if (predictedClass != actualClass) {
                 Instant start = Instant.now();
@@ -54,7 +53,6 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
         sampleNumber++;
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
 
-        int predicted;
         int actualClass = example.getMappedClass();
 
         Double[] votesForEachClass = initializeVoteForEachClass();
@@ -74,11 +72,9 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
             classifiersPojo.set(classifierIndex, classifierAndWeight);
         }
 
-        predicted = getIndexOfHighestValue(votesForEachClass);
-
         averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
 
-        return Tuple2.of(predicted, globalClassifyResults);
+        return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
     }
 
     @Override

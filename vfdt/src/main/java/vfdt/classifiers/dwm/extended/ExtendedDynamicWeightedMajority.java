@@ -58,9 +58,9 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
 
     @Override
     protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example) {
+        sampleNumber++;
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
 
-        int predicted;
         int actualClass = example.getMappedClass();
 
         Double[] votesForEachClass = initializeVoteForEachClass();
@@ -86,10 +86,8 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
             classifiersPojo.set(classifierIndex, classifierAndWeight);
         }
 
-        predicted = getIndexOfHighestValue(votesForEachClass);
-
         averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
 
-        return Tuple2.of(predicted, globalClassifyResults);
+        return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
     }
 }
