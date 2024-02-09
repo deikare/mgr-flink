@@ -172,7 +172,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     }
 
     private double getEpsilon() {
-        return ((double) R) * Math.sqrt(Math.log(2 / delta) / (2 * n));
+        return ((double) R) * Math.sqrt(Math.log(1 / delta) / (2 * n));
     }
 
     private class HighestHeuristicPOJO {
