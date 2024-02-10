@@ -11,12 +11,15 @@ public class ClassifierPojoExtended<C extends ClassifierInterface> extends Class
         clearWrongClassificationCounter();
     }
 
-    public long incWrongClassificationCounter() {
+    public void incWrongClassificationCounter() {
         wrongClassificationsCounter++;
-        return wrongClassificationsCounter;
     }
 
     public void clearWrongClassificationCounter() {
         wrongClassificationsCounter = 0L;
+    }
+
+    public long getWrongClassificationsCounter() {
+        return wrongClassificationsCounter;
     }
 }
