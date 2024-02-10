@@ -73,8 +73,8 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
             updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
 
             if (classifyResults.f0 != actualClass) {
-                long wrongClassificationsCounter = classifierAndWeight.incWrongClassificationCounter();
-                if (wrongClassificationsCounter % updateClassifiersEachSamples == 0) {
+                classifierAndWeight.incWrongClassificationCounter();
+                if (classifierAndWeight.getWrongClassificationsCounter() % updateClassifiersEachSamples == 0) {
                     classifierAndWeight.clearWrongClassificationCounter();
                     classifierAndWeight.lowerWeight(beta);
                     anyWeightChanged = true;
