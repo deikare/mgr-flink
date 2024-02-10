@@ -41,7 +41,7 @@ public class ClassifierPojo<C extends ClassifierInterface> {
         return classifier.classify(example);
     }
 
-    public void normalizeWeight(double weightsSum) {
-        weight /= weightsSum;
+    public void normalizeWeight(double maxWeight) {
+        weight /= maxWeight;
     }
 }
