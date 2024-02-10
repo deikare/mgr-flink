@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.ListIterator;
+import java.util.NoSuchElementException;
 
 public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface, T extends ClassifierPojo<C>> extends BaseClassifierClassifyAndTrain {
     protected final double beta;
@@ -41,7 +42,7 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
     protected ArrayList<Tuple2<String, Long>> normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold() {
         ArrayList<Tuple2<String, Long>> performances = new ArrayList<>(2);
 
-        double weightsSum = classifiersPojo.stream().mapToDouble(ClassifierPojo::getWeight).sum();
+        double maxWeight = classifiersPojo.stream().mapToDouble(ClassifierPojo::getWeight).max().orElseThrow(NoSuchElementException::new);
         ListIterator<T> classifierIterator = classifiersPojo.listIterator();
         long deletedCount = 0;
         long deletedTTL = 0;
@@ -50,7 +51,7 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
 
         while (classifierIterator.hasNext()) {
             T classifierAndWeight = classifierIterator.next();
-            classifierAndWeight.normalizeWeight(weightsSum);
+            classifierAndWeight.normalizeWeight(maxWeight);
             if (classifierAndWeight.getWeight() < threshold) {
                 classifierIterator.remove();
                 deletedCount++;
