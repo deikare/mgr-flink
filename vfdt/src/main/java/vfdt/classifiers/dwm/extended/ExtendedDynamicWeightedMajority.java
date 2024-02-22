@@ -56,50 +56,15 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
 
         return performances;
     }
-
+    
     @Override
-    protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example) {
-        sampleNumber++;
-        ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
-
-        Double[] votesForEachClass = initializeVoteForEachClass();
-
-        long weightsLoweringCount = 0L;
-
-        long correctVotesCount = 0L;
-        long wrongVotesCount = 0L;
-
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
-            ClassifierPojoExtended<C> classifierAndWeight = classifiersPojo.get(classifierIndex);
-
-            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.classify(example);
-
-            updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
-
-            if (classifyResults.f0 == example.getMappedClass())
-                correctVotesCount++;
-            else {
-                wrongVotesCount++;
-                classifierAndWeight.incWrongClassificationCounter();
-                if (classifierAndWeight.getWrongClassificationsCounter() % updateClassifiersEachSamples == 0) {
-                    classifierAndWeight.clearWrongClassificationCounter();
-                    classifierAndWeight.lowerWeight(beta);
-                    anyWeightChanged = true;
-                    weightsLoweringCount++;
-                }
-            }
-
-            votesForEachClass[classifyResults.f0] += classifierAndWeight.getWeight();
-
-            classifiersPojo.set(classifierIndex, classifierAndWeight);
+    protected long lowerWeightAndReturnWeightLoweringCount(ClassifierPojoExtended<C> classifierPojo, long weightsLoweringCount) {
+        if (classifierPojo.getWrongClassificationsCounter() % updateClassifiersEachSamples == 0) {
+            classifierPojo.clearWrongClassificationCounter();
+            classifierPojo.lowerWeight(beta);
+            anyWeightChanged = true;
+            weightsLoweringCount++;
         }
-
-        averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
-
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WEIGHTS_LOWERING_COUNT, weightsLoweringCount));
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.CORRECT_VOTES_COUNT, correctVotesCount));
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WRONG_VOTES_COUNT, wrongVotesCount));
-
-        return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
+        return weightsLoweringCount;
     }
 }

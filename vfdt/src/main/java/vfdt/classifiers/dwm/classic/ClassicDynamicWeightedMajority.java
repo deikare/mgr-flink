@@ -52,46 +52,12 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
     }
 
     @Override
-    protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example) {
-        sampleNumber++;
-        ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
-
-        Double[] votesForEachClass = initializeVoteForEachClass();
-
-        long weightsLoweringCount = 0L;
-
-        long correctVotesCount = 0L;
-        long wrongVotesCount = 0L;
-
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
-            ClassifierPojo<C> classifierPojo = classifiersPojo.get(classifierIndex);
-
-            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierPojo.classify(example);
-
-            updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
-
-            if (classifyResults.f0 == example.getMappedClass())
-                correctVotesCount++;
-            else {
-                wrongVotesCount++;
-                if (sampleNumber % updateClassifiersEachSamples == 0) {
-                    weightsLoweringCount++;
-                    classifierPojo.lowerWeight(beta);
-                }
-            }
-
-            votesForEachClass[classifyResults.f0] += classifierPojo.getWeight();
-
-            classifiersPojo.set(classifierIndex, classifierPojo);
+    protected long lowerWeightAndReturnWeightLoweringCount(ClassifierPojo<C> classifierPojo, long weightsLoweringCount) {
+        if (sampleNumber % updateClassifiersEachSamples == 0) {
+            weightsLoweringCount++;
+            classifierPojo.lowerWeight(beta);
         }
-
-        averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
-
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WEIGHTS_LOWERING_COUNT, weightsLoweringCount));
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.CORRECT_VOTES_COUNT, correctVotesCount));
-        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WRONG_VOTES_COUNT, wrongVotesCount));
-
-        return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
+        return weightsLoweringCount;
     }
 
     @Override
