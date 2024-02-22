@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.ListIterator;
 import java.util.NoSuchElementException;
 
+import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
+
 public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface, T extends ClassifierPojo<C>> extends BaseClassifierClassifyAndTrain {
     protected final double beta;
     protected final double threshold;
@@ -38,6 +40,53 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
             classifiersPojo.set(classifierIndex, classifier);
         }
     }
+
+//    @Override
+//    protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
+//        return null;
+//    }
+
+    @Override
+    protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example) {
+        sampleNumber++;
+        ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
+
+        Double[] votesForEachClass = initializeVoteForEachClass();
+
+        long weightsLoweringCount = 0L;
+
+        long correctVotesCount = 0L;
+        long wrongVotesCount = 0L;
+
+        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
+            T classifierPojo = classifiersPojo.get(classifierIndex);
+
+            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierPojo.classify(example);
+
+            updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
+
+            if (classifyResults.f0 == example.getMappedClass())
+                correctVotesCount++;
+            else {
+                wrongVotesCount++;
+                weightsLoweringCount = lowerWeightAndReturnWeightLoweringCount(classifierPojo, weightsLoweringCount);
+            }
+
+            votesForEachClass[classifyResults.f0] += classifierPojo.getWeight();
+
+            classifiersPojo.set(classifierIndex, classifierPojo);
+        }
+
+        averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
+
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WEIGHTS_LOWERING_COUNT, weightsLoweringCount));
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.CORRECT_VOTES_COUNT, correctVotesCount));
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WRONG_VOTES_COUNT, wrongVotesCount));
+
+        return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
+    }
+
+    protected abstract long lowerWeightAndReturnWeightLoweringCount(T classifierPojo, long weightsLoweringCount);
 
     protected ArrayList<Tuple2<String, Long>> normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold() {
         ArrayList<Tuple2<String, Long>> performances = new ArrayList<>(2);
