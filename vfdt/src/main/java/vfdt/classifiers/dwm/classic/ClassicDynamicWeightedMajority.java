@@ -20,10 +20,9 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
 
     @Override
     protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
-        int actualClass = example.getMappedClass();
         if (sampleNumber % updateClassifiersEachSamples == 0) {
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
-            if (predictedClass != actualClass) {
+            if (predictedClass != example.getMappedClass()) {
                 Instant start = Instant.now();
                 classifiersPojo.add(createClassifierWithWeight(sampleNumber));
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, Helpers.toNow(start)));
@@ -32,16 +31,20 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
             performances.addAll(normalizationAndDeletePerformances);
         }
 
+        ArrayList<Tuple2<String, Long>> avgLocalPerformances = new ArrayList<>();
         for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
+            //czyli trzeba jak obcinamy wagę, to sortować w odpowiedniej kolejności klasyfikator
+            //w ten sposób max będzie zawsze z przodu po przejściu wszystkich
             ClassifierPojo<C> classifierAndWeight = classifiersPojo.get(classifierIndex);
             ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifierAndWeight.train(example);
 
-            updateGlobalWithLocalPerformances(localClassifierPerformances, performances);
+            updateGlobalWithLocalPerformances(localClassifierPerformances, avgLocalPerformances);
 
             classifiersPojo.set(classifierIndex, classifierAndWeight);
         }
 
-        averagePerformanceByLocalClassifier(performances, classifiersPojo.size());
+        averagePerformanceByLocalClassifier(avgLocalPerformances, classifiersPojo.size());
+        performances.addAll(avgLocalPerformances);
 
         performances.add(Tuple2.of(DwmClassifierFields.CLASSIFIERS_AFTER_TRAIN_COUNT, (long) classifiersPojo.size()));
 
@@ -53,26 +56,40 @@ public abstract class ClassicDynamicWeightedMajority<C extends ClassifierInterfa
         sampleNumber++;
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
 
-        int actualClass = example.getMappedClass();
-
         Double[] votesForEachClass = initializeVoteForEachClass();
 
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
-            ClassifierPojo<C> classifierAndWeight = classifiersPojo.get(classifierIndex);
+        long weightsLoweringCount = 0L;
 
-            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierAndWeight.classify(example);
+        long correctVotesCount = 0L;
+        long wrongVotesCount = 0L;
+
+        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
+            ClassifierPojo<C> classifierPojo = classifiersPojo.get(classifierIndex);
+
+            Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierPojo.classify(example);
 
             updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
 
-            if (classifyResults.f0 != actualClass && sampleNumber % updateClassifiersEachSamples == 0)
-                classifierAndWeight.lowerWeight(beta);
+            if (classifyResults.f0 == example.getMappedClass())
+                correctVotesCount++;
+            else {
+                wrongVotesCount++;
+                if (sampleNumber % updateClassifiersEachSamples == 0) {
+                    weightsLoweringCount++;
+                    classifierPojo.lowerWeight(beta);
+                }
+            }
 
-            votesForEachClass[classifyResults.f0] += classifierAndWeight.getWeight();
+            votesForEachClass[classifyResults.f0] += classifierPojo.getWeight();
 
-            classifiersPojo.set(classifierIndex, classifierAndWeight);
+            classifiersPojo.set(classifierIndex, classifierPojo);
         }
 
         averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
+
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WEIGHTS_LOWERING_COUNT, weightsLoweringCount));
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.CORRECT_VOTES_COUNT, correctVotesCount));
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WRONG_VOTES_COUNT, wrongVotesCount));
 
         return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
     }
