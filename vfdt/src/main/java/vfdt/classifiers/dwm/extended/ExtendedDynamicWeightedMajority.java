@@ -27,11 +27,10 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
 
     @Override
     protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
-        int actualClass = example.getMappedClass();
         if (anyWeightChanged) {
             anyWeightChanged = false;
             ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
-            if (predictedClass != actualClass) {
+            if (predictedClass != example.getMappedClass()) {
                 Instant start = Instant.now();
                 classifiersPojo.add(createClassifierWithWeight(sampleNumber));
                 normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, Helpers.toNow(start)));
@@ -40,16 +39,18 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
             performances.addAll(normalizationAndDeletePerformances);
         }
 
+        ArrayList<Tuple2<String, Long>> avgLocalPerformances = new ArrayList<>();
         for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
             ClassifierPojoExtended<C> classifierAndWeight = classifiersPojo.get(classifierIndex);
             ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifierAndWeight.train(example);
 
-            updateGlobalWithLocalPerformances(localClassifierPerformances, performances);
+            updateGlobalWithLocalPerformances(localClassifierPerformances, avgLocalPerformances);
 
             classifiersPojo.set(classifierIndex, classifierAndWeight);
         }
 
-        averagePerformanceByLocalClassifier(performances, classifiersPojo.size());
+        averagePerformanceByLocalClassifier(avgLocalPerformances, classifiersPojo.size());
+        performances.addAll(avgLocalPerformances);
 
         performances.add(Tuple2.of(DwmClassifierFields.CLASSIFIERS_AFTER_TRAIN_COUNT, (long) classifiersPojo.size()));
 
@@ -61,9 +62,12 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
         sampleNumber++;
         ArrayList<Tuple2<String, Long>> globalClassifyResults = new ArrayList<>();
 
-        int actualClass = example.getMappedClass();
-
         Double[] votesForEachClass = initializeVoteForEachClass();
+
+        long weightsLoweringCount = 0L;
+
+        long correctVotesCount = 0L;
+        long wrongVotesCount = 0L;
 
         for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
             ClassifierPojoExtended<C> classifierAndWeight = classifiersPojo.get(classifierIndex);
@@ -72,12 +76,16 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
 
             updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
 
-            if (classifyResults.f0 != actualClass) {
+            if (classifyResults.f0 == example.getMappedClass())
+                correctVotesCount++;
+            else {
+                wrongVotesCount++;
                 classifierAndWeight.incWrongClassificationCounter();
                 if (classifierAndWeight.getWrongClassificationsCounter() % updateClassifiersEachSamples == 0) {
                     classifierAndWeight.clearWrongClassificationCounter();
                     classifierAndWeight.lowerWeight(beta);
                     anyWeightChanged = true;
+                    weightsLoweringCount++;
                 }
             }
 
@@ -87,6 +95,10 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
         }
 
         averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
+
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WEIGHTS_LOWERING_COUNT, weightsLoweringCount));
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.CORRECT_VOTES_COUNT, correctVotesCount));
+        globalClassifyResults.add(Tuple2.of(DwmClassifierFields.WRONG_VOTES_COUNT, wrongVotesCount));
 
         return Tuple2.of(getIndexOfHighestValue(votesForEachClass), globalClassifyResults);
     }

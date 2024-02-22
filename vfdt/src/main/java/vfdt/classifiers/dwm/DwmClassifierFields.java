@@ -10,4 +10,7 @@ public class DwmClassifierFields {
     public final static String ADD_CLASSIFIER_DURATION = "addClassifierDuration";
     public final static String CLASSIFIERS_AFTER_TRAIN_COUNT = "classifiersAfterTrainCount";
     public final static String AVG_CLASSIFIER_TTL = "avgClassifierTTL";
+    public final static String WEIGHTS_LOWERING_COUNT = "weightsLoweringCount";
+    public final static String CORRECT_VOTES_COUNT = "correctVotesCount";
+    public final static String WRONG_VOTES_COUNT = "wrongVotesCount";
 }
