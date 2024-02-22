@@ -1,16 +1,7 @@
 package vfdt.classifiers.dwm.extended;
 
-import org.apache.flink.api.java.tuple.Tuple2;
 import vfdt.classifiers.base.BaseDynamicWeightedMajority;
-import vfdt.classifiers.dwm.DwmClassifierFields;
 import vfdt.classifiers.dwm.classic.ClassifierInterface;
-import vfdt.classifiers.helpers.Helpers;
-import vfdt.inputs.Example;
-
-import java.time.Instant;
-import java.util.ArrayList;
-
-import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
 public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterface> extends BaseDynamicWeightedMajority<C, ClassifierPojoExtended<C>> {
     protected boolean anyWeightChanged; //two ideas - first to use flag, second to use array of lowered weight classifiers indices - second idea doesn't work because still all classifiers should be normalized
@@ -26,42 +17,21 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
     }
 
     @Override
-    protected ArrayList<Tuple2<String, Long>> trainImplementation(Example example, int predictedClass, ArrayList<Tuple2<String, Long>> performances) {
-        if (anyWeightChanged) {
-            anyWeightChanged = false;
-            ArrayList<Tuple2<String, Long>> normalizationAndDeletePerformances = normalizeWeightsAndDeleteClassifiersWithWeightUnderThreshold();
-            if (predictedClass != example.getMappedClass()) {
-                Instant start = Instant.now();
-                classifiersPojo.add(createClassifierWithWeight(sampleNumber));
-                normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADD_CLASSIFIER_DURATION, Helpers.toNow(start)));
-                normalizationAndDeletePerformances.add(Tuple2.of(DwmClassifierFields.ADDED_CLASSIFIERS_COUNT, 1L));
-            }
-            performances.addAll(normalizationAndDeletePerformances);
-        }
-
-        ArrayList<Tuple2<String, Long>> avgLocalPerformances = new ArrayList<>();
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
-            ClassifierPojoExtended<C> classifierAndWeight = classifiersPojo.get(classifierIndex);
-            ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifierAndWeight.train(example);
-
-            updateGlobalWithLocalPerformances(localClassifierPerformances, avgLocalPerformances);
-
-            classifiersPojo.set(classifierIndex, classifierAndWeight);
-        }
-
-        averagePerformanceByLocalClassifier(avgLocalPerformances, classifiersPojo.size());
-        performances.addAll(avgLocalPerformances);
-
-        performances.add(Tuple2.of(DwmClassifierFields.CLASSIFIERS_AFTER_TRAIN_COUNT, (long) classifiersPojo.size()));
-
-        return performances;
+    protected boolean shouldNormalizeWeightsAndDeleteClassifiers() {
+        return anyWeightChanged;
     }
-    
+
+    @Override
+    protected void normalizeWeightsAndDeleteClassifiersSideEffects() {
+        anyWeightChanged = false;
+    }
+
     @Override
     protected long lowerWeightAndReturnWeightLoweringCount(ClassifierPojoExtended<C> classifierPojo, long weightsLoweringCount) {
         if (classifierPojo.getWrongClassificationsCounter() % updateClassifiersEachSamples == 0) {
             classifierPojo.clearWrongClassificationCounter();
             classifierPojo.lowerWeight(beta);
+            //prawdopodobnie tutaj jest błąd, który poprawia skuteczność - nie wiem, czy rzeczywiście na zewnątrz funkcji classifierPojo jest modyfikowany
             anyWeightChanged = true;
             weightsLoweringCount++;
         }
