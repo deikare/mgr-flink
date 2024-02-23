@@ -208,8 +208,8 @@ public class DataStreamJob {
                         int classNumber = decoder.size();
                         double beta = 0.5;
                         double threshold = 0.2;
-                        int updateClassifiersEachSamples = 10;
-                        int windowSize = 100;
+                        int updateClassifiersEachSamples = 5;
+                        int windowSize = 20;
 
                         return new WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples, windowSize) {
                             @Override
