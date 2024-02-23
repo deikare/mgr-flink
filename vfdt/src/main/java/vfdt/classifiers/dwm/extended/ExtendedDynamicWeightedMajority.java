@@ -28,10 +28,10 @@ public abstract class ExtendedDynamicWeightedMajority<C extends ClassifierInterf
 
     @Override
     protected long lowerWeightAndReturnWeightLoweringCount(ClassifierPojoExtended<C> classifierPojo, long weightsLoweringCount) {
+        classifierPojo.incWrongClassificationCounter();
         if (classifierPojo.getWrongClassificationsCounter() % updateClassifiersEachSamples == 0) {
             classifierPojo.clearWrongClassificationCounter();
             classifierPojo.lowerWeight(beta);
-            //prawdopodobnie tutaj jest błąd, który poprawia skuteczność - nie wiem, czy rzeczywiście na zewnątrz funkcji classifierPojo jest modyfikowany
             anyWeightChanged = true;
             weightsLoweringCount++;
         }
