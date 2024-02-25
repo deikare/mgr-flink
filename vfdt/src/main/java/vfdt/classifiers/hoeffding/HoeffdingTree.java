@@ -88,7 +88,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         this.tau = tau;
         this.nMin = nMin;
         this.statisticsBuilder = statisticsBuilder;
-        this.root = new Node<>(statisticsBuilder);
+        this.root = new Node<>(statisticsBuilder, null);
     }
 
     protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example, ArrayList<Tuple2<String, Long>> performances) throws RuntimeException {
@@ -123,16 +123,16 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 
             HighestHeuristicPOJO pojo = new HighestHeuristicPOJO(leaf);
 
-            if (pojo.attributeNumber == null) {
+            if (pojo.xA == null) {
                 String msg = "Hoeffding test showed no attributes";
                 logger.info(msg);
                 throw new RuntimeException(msg);
             } else if (pojo.hXa != null && pojo.hXb != null && (pojo.hXa - pojo.hXb > eps)) {
                 logger.info("Heuristic value is correspondingly higher, splitting");
-                leaf.split(pojo.attributeNumber, statisticsBuilder, example);
+                leaf.split(pojo.xA, statisticsBuilder, example);
             } else if (eps < tau) {
                 logger.info("Epsilon is lower than tau, splitting");
-                leaf.split(pojo.attributeNumber, statisticsBuilder, example);
+                leaf.split(pojo.xA, statisticsBuilder, example);
             } else logger.info("No split");
         } else logger.info("Not enough samples to test splits");
     }
@@ -176,30 +176,39 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     }
 
     private class HighestHeuristicPOJO {
-        final Integer attributeNumber;
-        final Double hXa;
-        final Double hXb;
+        Integer xA;
+        private Integer xB;
+        Double hXa;
+        Double hXb;
+
 
         public HighestHeuristicPOJO(Node<N_S, B> node) {
-            Double hXbTemp = null;
-            Double hXaTemp = null;
-            Integer xaTemp = null;
-            Integer xbTemp = null;
+            hXb = null;
+            hXa = null;
+            xA = null;
+            xB = null;
 
-            for (int i = 0; i < attributesNumber; i++) {
+            Integer disabledAttributeIndex = node.getDisabledAttributeIndex();
+
+            if (disabledAttributeIndex == null)
+                findXaAndXb(0, attributesNumber, node);
+            else {
+                findXaAndXb(0, disabledAttributeIndex, node);
+                findXaAndXb(disabledAttributeIndex + 1, attributesNumber, node);
+            }
+        }
+
+        void findXaAndXb(int startIndex, int endIndex, Node<N_S, B> node) {
+            for (int i = startIndex; i < endIndex; i++) {
                 double h = heuristic(i, node);
-                if (xaTemp == null || h > hXaTemp) {
-                    xaTemp = i;
-                    hXaTemp = h;
-                } else if (xbTemp == null || h > hXbTemp) {
-                    xbTemp = i;
-                    hXbTemp = h;
+                if (xA == null || h > hXa) {
+                    xA = i;
+                    hXa = h;
+                } else if (xB == null || h > hXb) {
+                    xB = i;
+                    hXb = h;
                 }
             }
-
-            hXb = hXbTemp;
-            hXa = hXaTemp;
-            attributeNumber = xaTemp;
         }
     }
 
