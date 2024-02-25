@@ -200,28 +200,28 @@ public class DataStreamJob {
         extendedDwmStream.addSink(new LoggingSink()).name("logging-sink-extended-dwm");
         extendedDwmStream.sinkTo(kafkaSink).name("kafka-sink-extended-dwm");
 
-        DataStream<String> windowedDwmStream = env.fromCollection(data.f0)
-                .keyBy(Example::getId)
-                .process(new WindowedDwmProcessFunction("windowedDwm", dataset, bootstrapSamplesLimit) {
-                    @Override
-                    protected WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
-                        int classNumber = decoder.size();
-                        double beta = 0.5;
-                        double threshold = 0.2;
-                        int updateClassifiersEachSamples = 5;
-                        int windowSize = 20;
-
-                        return new WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples, windowSize) {
-                            @Override
-                            protected GaussianNaiveBayesClassifier createClassifier() {
-                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
-                            }
-                        };
-                    }
-                }).name("process-examples-windowed-dwm");
-
-        windowedDwmStream.addSink(new LoggingSink()).name("logging-sink-windowed-dwm");
-        windowedDwmStream.sinkTo(kafkaSink).name("kafka-sink-windowed-dwm");
+//        DataStream<String> windowedDwmStream = env.fromCollection(data.f0)
+//                .keyBy(Example::getId)
+//                .process(new WindowedDwmProcessFunction("windowedDwm", dataset, bootstrapSamplesLimit) {
+//                    @Override
+//                    protected WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
+//                        int classNumber = decoder.size();
+//                        double beta = 0.5;
+//                        double threshold = 0.2;
+//                        int updateClassifiersEachSamples = 5;
+//                        int windowSize = 20;
+//
+//                        return new WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples, windowSize) {
+//                            @Override
+//                            protected GaussianNaiveBayesClassifier createClassifier() {
+//                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
+//                            }
+//                        };
+//                    }
+//                }).name("process-examples-windowed-dwm");
+//
+//        windowedDwmStream.addSink(new LoggingSink()).name("logging-sink-windowed-dwm");
+//        windowedDwmStream.sinkTo(kafkaSink).name("kafka-sink-windowed-dwm");
 
         env.execute("Classifiers tester");
     }
