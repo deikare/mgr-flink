@@ -8,7 +8,7 @@ HOST="http://influxdb:8086"
 
 CONFIG_PATH="/etc/influxdb/configs"
 
-influx setup --bucket data --host $HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f
+influx setup --bucket data --host $HOST -t $TOKEN -o $ORG --username=$USERNAME --password=$PASSWORD -f -r "24h"
 
 
 influx bucket list --host $HOST -t $TOKEN -o $ORG
