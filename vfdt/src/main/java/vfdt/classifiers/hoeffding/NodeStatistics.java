@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
-public abstract class NodeStatistics implements StatisticsInterface {
+public abstract class NodeStatistics {
     private long n;
 
     private final Long[] classCounts;
@@ -18,17 +18,18 @@ public abstract class NodeStatistics implements StatisticsInterface {
             classCounts[i] = 0L;
     }
 
-    public void update(Example example) {
+    public void update(Example example, Integer disabledAttributeIndex) {
         n++;
         classCounts[example.getMappedClass()] += 1L;
+        updateAttributeStatistics(example, disabledAttributeIndex);
     }
 
-    @Override
+    protected abstract void updateAttributeStatistics(Example example, Integer disabledAttributeIndex);
+
     public int getMajorityClass() {
         return getIndexOfHighestValue(classCounts);
     }
 
-    @Override
     public double getSplittingValue(int attributeNumber) {
         return 0;
     }
