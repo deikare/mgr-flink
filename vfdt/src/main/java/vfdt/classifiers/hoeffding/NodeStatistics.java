@@ -6,7 +6,7 @@ import java.util.Arrays;
 
 import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
-public class NodeStatistics implements StatisticsInterface {
+public abstract class NodeStatistics implements StatisticsInterface {
     private long n;
 
     private final Long[] classCounts;
