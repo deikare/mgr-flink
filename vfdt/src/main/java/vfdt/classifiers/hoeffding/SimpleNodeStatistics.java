@@ -17,10 +17,18 @@ public class SimpleNodeStatistics extends NodeStatistics {
     }
 
     @Override
-    public void update(Example example) throws RuntimeException {
-        super.update(example);
+    protected void updateAttributeStatistics(Example example, Integer disabledAttributeIndex) {
+        if (disabledAttributeIndex == null)
+            incrementAttributeCounts(example, 0, attributeValueCounts.size());
+        else {
+            incrementAttributeCounts(example, 0, disabledAttributeIndex);
+            incrementAttributeCounts(example, disabledAttributeIndex + 1, attributeValueCounts.size());
+        }
+    }
+
+    private void incrementAttributeCounts(Example example, int start, int end) {
         double[] exampleAttributes = example.getAttributes();
-        for (int i = 0; i < attributeValueCounts.size(); i++) {
+        for (int i = start; i < end; i++) {
             attributeValueCounts.get(i).compute(exampleAttributes[i], (key, value) -> (value == null) ? 1L : value + 1L);
         }
     }

@@ -60,7 +60,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     }
 
     public void updateStatistics(Example example) {
-        statistics.update(example);
+        statistics.update(example, disabledAttributeIndex);
     }
 
 
