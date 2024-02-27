@@ -13,43 +13,7 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
 
     private final Integer disabledAttributeIndex;
 
-    private N_S statistics;
-
-    public Node<N_S, B> getLeftChild() {
-        return leftChild;
-    }
-
-    public void setLeftChild(Node<N_S, B> leftChild) {
-        this.leftChild = leftChild;
-    }
-
-    public Node<N_S, B> getRightChild() {
-        return rightChild;
-    }
-
-    public void setRightChild(Node<N_S, B> rightChild) {
-        this.rightChild = rightChild;
-    }
-
-    public double getSplittingValue() {
-        return splittingValue;
-    }
-
-    public void setSplittingValue(double splittingValue) {
-        this.splittingValue = splittingValue;
-    }
-
-    public int getSplittingAttributeNumber() {
-        return splittingAttributeNumber;
-    }
-
-    public void setSplittingAttributeNumber(int splittingAttributeNumber) {
-        this.splittingAttributeNumber = splittingAttributeNumber;
-    }
-
-    public void setStatistics(N_S statistics) {
-        this.statistics = statistics;
-    }
+    private final N_S statistics;
 
     public Node(B statisticsBuilder, Integer disabledAttributeIndex) {
         this.statistics = statisticsBuilder.build();

@@ -10,71 +10,13 @@ import vfdt.inputs.Example;
 import java.time.Instant;
 import java.util.*;
 
-/*TODO etap 2
-- przerzucić liczenie statystyk do grafany - process function zwraca jsona z zmierzonymi statystykami
-- dorzucić grafanę (lub inne narzędzie UI) robiącą wykres dokładności w czasie rzeczywistym
-- dopisać do pracy mgr
-- zapuścić na innych danych
-- poczytać o klasyfikatorach bayesowskich
-sdasdsd*/
-
-/*
-- kwestia implementacji w Flinku - czy zrobić po prostu obiekt drzewa przy użyciu ValueState<Drzewo>, potem zrównoleglanie z wykorzystaniem Flinka
-
-- kwestia klasyfikatora w liściu drzewa - czy zostawić statystycznie obliczaną klasę większościową,
-czy od razu robić np klasyfikator bayesowski - w następnym etapie
-
-- podział atrybutów na ciągłe i dyskretne - jak ustalać wartość progową podziału (np z wykorzystaniem B-drzewa z przykładu z książki), jak w przypadku atrybutów dyskretnych - nawet w przypadku dyskretnych sprawdzamy nierówności
-- spróbować na początku najłatwiejszą
-- dyskretne zmienne zawsze można kodować jako ciągłe
-
-- zrobić start N próbek, podczas których tylko uczymy klasyfikator
-
-- podział atrybutów - czy robić zawsze podział na dwie gałęzie
-    - czy w takiej sytuacji przy zmiennych dyskretnych robić prosty podział - gałęzie równe/różne atrybutowi o największej heurystyce podczas dzielenia
-
-- czy kształt funkcji heurystyki atrybutów powinien być zależny od node'a w drzewie, czy stały dla całego drzewa -
-    funkcja będzie wtedy liczyć heurystykę tylko na podstawie statystyk node'a w drzewie - na początku stałą, potem można rozbudować
-
-- jaką użyć sensowną funkcję heurystyki do testowania prostego klasyfikatora
-
-- jaki zrobić prosty przykład do testowania - np. atrybuty ((ciągłe)x, y, jakieś parametry dyskretne)
-
-- czy jest jakaś praca opisująca dobór parametru tau - eksperymentalnie - zależne od problemu, charakteru danych - użyc w klasyfikatorze tau
-
-- czy robić coś więcej podczas uczenia w przypadku, gdy klasa aktualnej próbki == klasa większościowa liścia? np prowadzić statystykę poprawnych trafień
-
-- czy na ten moment wystarczy odczytywanie strumienia z pliku, czy podpiąć Flinka pod Kafkę odczytującą z wielu producentów
-
-- co napisać w podsumowaniu pracowni - 10-15 stron - spróbować pisać tekst ściśle pod pracę:
-    - cel pracy
-    - opisać Flinka
-    - algorytm
-    - eksperymenty
-
- */
-
-//Parametry:
-
- /*
- histogramy:
-- średnia szybkość przeglądania drzewa
-- liczba node'ów w drzewie
-- ile średnio node'ów musi pokonać próbka podczas przejścia
-- średni czas przetworzenia próbki podczas uczenia
-- średni czas przetworzenia próbki podczas klasyfikacji
-- szybkość obliczenia klasy większościowej
-- liczba próbek poprawnie sklasyfikowanych
-- liczba próbek błędnie sklasyfikowanych
- */
-
 public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifierTrainAndClassify {
     private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
     private final long nMin;
 
     private final int R;
     private final double delta;
-    private final int attributesNumber; //TODO separate attributes on those which are continuous and discrete - this way e.g. decorator pattern should be used in branching instead of getChildIndex from ComparatorInterface
+    private final int attributesNumber;
     private final double tau;
     private final Node<N_S, B> root;
     private final B statisticsBuilder;
@@ -213,65 +155,4 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     }
 
     protected abstract double heuristic(int attributeIndex, Node<N_S, B> node);
-
-//    public static void main(String[] args) {
-//        String path = "/home/deikare/wut/streaming-datasets/" + "elec.csv";
-//        HashSet<String> attributes = new HashSet<>();
-//
-//        try {
-//            File file = new File(path);
-//            Scanner scanner = new Scanner(file);
-//
-//            String line = scanner.nextLine();
-//
-//            String[] attributesAsString = line.split(",");
-//            System.out.println(attributesAsString[attributesAsString.length - 1]);
-//            int n = attributesAsString.length - 1;
-//            attributes.addAll(Arrays.asList(attributesAsString).subList(0, n));
-//
-//            SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes);
-//            double delta = 0.05;
-//            double tau = 0.2;
-//            long nMin = 50;
-//            long batchStatLength = 500;
-//            long classesAmount = 2;
-//
-//
-//            HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> tree = new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes, tau, nMin, statisticsBuilder) {
-//                @Override
-//                protected double heuristic(String attribute, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
-//                    return 0;
-//                }
-//            };
-//
-//            while (scanner.hasNext()) {
-//                line = scanner.nextLine();
-//
-//                String[] attributesValuesAsString = line.split(",");
-//                HashMap<String, Double> attributesMap = new HashMap<>(n);
-//                for (int i = 0; i < n; i++) {
-//                    attributesMap.put(attributesAsString[i], Double.parseDouble(attributesValuesAsString[i]));
-//                }
-//
-//                String className = attributesValuesAsString[n];
-//                Example example = new Example(className, attributesMap);
-//
-//                tree.trainImplementation(example);
-//
-////                if (tree.classifyImplementation(example) == null)
-////                    tree.classifyImplementation(example); //TODO spytać o to, czy najpierw powinna być predykcja, czy trening
-//            }
-//
-////            System.out.println(tree.printStatistics());
-////            tree.printStatisticsToFile(path);
-//        } catch (FileNotFoundException e) {
-//            System.out.println("No file found");
-//            e.printStackTrace();
-//        }
-////        } catch (UnsupportedEncodingException e) {
-////            throw new RuntimeException(e);
-////        }
-//    }
-
-
 }
