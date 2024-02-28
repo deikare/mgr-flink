@@ -49,10 +49,7 @@ public class GaussianNaiveBayesClassifier extends NaiveBayesClassifier {
             Tuple2<Double, Double> attributeValueSums = attributeSums.get(i);
             attributeValueSums.f0 += attributeValue;
             attributeValueSums.f1 += Math.pow(attributeValue, 2.0);
-            attributeSums.set(i, attributeValueSums);
         }
-
-        attributeSumsForEachClass.set(classNumber, attributeSums);
 
         return new ArrayList<>(Collections.singletonList(Tuple2.of(NaiveBayesFields.AVG_TRAIN_DURATION, toNow(start))));
     }
