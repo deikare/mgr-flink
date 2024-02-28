@@ -3,11 +3,8 @@ package vfdt.inputs;
 import java.util.Arrays;
 
 public class Example {
-    private int mappedClass;
-    private double[] attributes;
-
-    public Example() {
-    }
+    private final int mappedClass;
+    private final double[] attributes;
 
     public Example(int mappedClass, double[] attributes) {
         this.mappedClass = mappedClass;
@@ -20,14 +17,6 @@ public class Example {
 
     public double[] getAttributes() {
         return attributes;
-    }
-
-    public void setMappedClass(int mappedClass) {
-        this.mappedClass = mappedClass;
-    }
-
-    public void setAttributes(double[] attributes) {
-        this.attributes = attributes;
     }
 
     @Override
