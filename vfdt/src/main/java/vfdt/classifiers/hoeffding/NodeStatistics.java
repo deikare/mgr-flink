@@ -30,9 +30,7 @@ public abstract class NodeStatistics {
         return getIndexOfHighestValue(classCounts);
     }
 
-    public double getSplittingValue(int attributeNumber) {
-        return 0;
-    }
+    public abstract double getSplittingValue(int attributeNumber);
 
     public long getN() {
         return n;
