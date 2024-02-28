@@ -127,7 +127,7 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
                 classifierIterator.remove();
                 deletedCount++;
                 deletedTTL += sampleNumber - classifierAndWeight.getSampleNumber();
-            } else classifierIterator.set(classifierAndWeight);
+            }
         }
 
         performances.add(Tuple2.of(DwmClassifierFields.WEIGHTS_NORMALIZATION_AND_CLASSIFIER_DELETE_DURATION, Helpers.toNow(start)));
