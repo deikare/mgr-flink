@@ -140,11 +140,7 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
     }
 
     protected static void averagePerformanceByLocalClassifier(ArrayList<Tuple2<String, Long>> globalClassifyResults, int usedClassifiersCount) {
-        for (int resultIndex = 0; resultIndex < globalClassifyResults.size(); resultIndex++) {
-            Tuple2<String, Long> measurement = globalClassifyResults.get(resultIndex);
-            measurement.f1 /= usedClassifiersCount;
-            globalClassifyResults.set(resultIndex, measurement);
-        }
+        globalClassifyResults.forEach(measurement -> measurement.f1 /= usedClassifiersCount);
     }
 
     protected static void updateGlobalWithLocalPerformances(ArrayList<Tuple2<String, Long>> localPerformances, ArrayList<Tuple2<String, Long>> globalPerformances) {
