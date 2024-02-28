@@ -34,11 +34,8 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
 
     @Override
     public void bootstrapTrainImplementation(Example example) {
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
-            T classifier = classifiersPojo.get(classifierIndex);
-            classifier.getClassifier().train(example);
-            classifiersPojo.set(classifierIndex, classifier);
-        }
+
+        classifiersPojo.forEach(classifier -> classifier.getClassifier().train(example));
     }
 
     @Override
