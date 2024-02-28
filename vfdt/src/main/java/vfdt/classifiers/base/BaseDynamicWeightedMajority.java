@@ -52,17 +52,13 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
         }
 
         ArrayList<Tuple2<String, Long>> avgLocalPerformances = new ArrayList<>();
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
+        classifiersPojo.forEach(classifier -> {
             //czyli trzeba jak obcinamy wagę, to sortować w odpowiedniej kolejności klasyfikator
             //w ten sposób max będzie zawsze z przodu po przejściu wszystkich
             // może też zbierać n ostatnich klasyfikacji w okno i jeżeli jest odpowiednio wiele pomyłek, to wtedy obcinaj wagę
-            T classifierPojo = classifiersPojo.get(classifierIndex);
-            ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifierPojo.train(example);
-
+            ArrayList<Tuple2<String, Long>> localClassifierPerformances = classifier.train(example);
             updateGlobalWithLocalPerformances(localClassifierPerformances, avgLocalPerformances);
-
-            classifiersPojo.set(classifierIndex, classifierPojo);
-        }
+        });
 
         averagePerformanceByLocalClassifier(avgLocalPerformances, classifiersPojo.size());
         performances.addAll(avgLocalPerformances);
