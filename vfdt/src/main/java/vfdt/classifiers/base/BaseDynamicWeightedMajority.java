@@ -84,9 +84,7 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
         long correctVotesCount = 0L;
         long wrongVotesCount = 0L;
 
-        for (int classifierIndex = 0; classifierIndex < classifiersPojo.size(); classifierIndex++) {
-            T classifierPojo = classifiersPojo.get(classifierIndex);
-
+        for (T classifierPojo : classifiersPojo) {
             Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyResults = classifierPojo.classify(example);
 
             updateGlobalWithLocalPerformances(classifyResults.f1, globalClassifyResults);
@@ -99,8 +97,6 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
             }
 
             votesForEachClass[classifyResults.f0] += classifierPojo.getWeight();
-
-            classifiersPojo.set(classifierIndex, classifierPojo);
         }
 
         averagePerformanceByLocalClassifier(globalClassifyResults, classifiersPojo.size());
