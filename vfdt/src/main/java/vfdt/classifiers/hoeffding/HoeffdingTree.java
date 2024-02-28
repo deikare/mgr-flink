@@ -23,7 +23,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
     private long n = 0L;
 
 
-    public HoeffdingTree(long classesNumber, double delta, int attributesNumber, double tau, long nMin, B statisticsBuilder) {
+    public HoeffdingTree(int classesNumber, double delta, int attributesNumber, double tau, long nMin, B statisticsBuilder) {
         this.R = (int) (Math.log(classesNumber) / Math.log(2));
         this.delta = delta;
         this.attributesNumber = attributesNumber;

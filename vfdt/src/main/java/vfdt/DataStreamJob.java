@@ -140,9 +140,9 @@ public class DataStreamJob {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
-                        long classesAmount = decoder.size();
+                        int classesAmount = decoder.size();
 
-                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(attributes.size());
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classesAmount, attributes.size());
                         return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes.size(), tau, nMin, statisticsBuilder) {
                             @Override
                             protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
