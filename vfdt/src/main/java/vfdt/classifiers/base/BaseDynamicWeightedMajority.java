@@ -150,7 +150,6 @@ public abstract class BaseDynamicWeightedMajority<C extends ClassifierInterface,
             else {
                 Tuple2<String, Long> measurementFromGlobal = globalPerformances.get(localMeasurementIndex);
                 measurementFromGlobal.f1 += localPerformances.get(localMeasurementIndex).f1;
-                globalPerformances.set(localMeasurementIndex, measurementFromGlobal);
             }
         }
     }
