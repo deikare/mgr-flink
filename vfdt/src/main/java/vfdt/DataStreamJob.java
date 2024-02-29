@@ -132,6 +132,8 @@ public class DataStreamJob {
                 .setDeliveryGuarantee(DeliveryGuarantee.AT_LEAST_ONCE)
                 .build();
 
+        int classNumber = decoder.size();
+
         DataStream<String> vfdtStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
                 .process(new VfdtProcessFunction("vfdt", dataset, bootstrapSamplesLimit) {
@@ -140,10 +142,9 @@ public class DataStreamJob {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
-                        int classesAmount = decoder.size();
 
-                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classesAmount, attributes.size());
-                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classesAmount, delta, attributes.size(), tau, nMin, statisticsBuilder) {
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributes.size());
+                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributes.size(), tau, nMin, statisticsBuilder) {
                             @Override
                             protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                                 double threshold = 0.5;
@@ -162,7 +163,6 @@ public class DataStreamJob {
                 .process(new ClassicDwmProcessFunction("classicDwm", dataset, bootstrapSamplesLimit) {
                     @Override
                     protected ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
-                        int classNumber = decoder.size();
                         double beta = 0.5;
                         double threshold = 0.2;
                         int updateClassifiersEachSamples = 1;
@@ -183,7 +183,6 @@ public class DataStreamJob {
                 .process(new ExtendedDwmProcessFunction("extendedDwm", dataset, bootstrapSamplesLimit) {
                     @Override
                     protected ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
-                        int classNumber = decoder.size();
                         double beta = 0.5;
                         double threshold = 0.2;
                         int updateClassifiersEachSamples = 1;
@@ -205,7 +204,6 @@ public class DataStreamJob {
 //                .process(new WindowedDwmProcessFunction("windowedDwm", dataset, bootstrapSamplesLimit) {
 //                    @Override
 //                    protected WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
-//                        int classNumber = decoder.size();
 //                        double beta = 0.5;
 //                        double threshold = 0.2;
 //                        int updateClassifiersEachSamples = 5;
