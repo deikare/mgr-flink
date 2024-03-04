@@ -64,8 +64,8 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     }
 
 
-    public int getMajorityClass() {
-        return statistics.getMajorityClass();
+    public int getMajorityClass(Example example) {
+        return statistics.getMajorityClass(example);
     }
 
     public long getN() {

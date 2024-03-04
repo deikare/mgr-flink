@@ -35,7 +35,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
 
     protected Tuple2<Integer, ArrayList<Tuple2<String, Long>>> classifyImplementation(Example example, ArrayList<Tuple2<String, Long>> performances) throws RuntimeException {
         Node<N_S, B> leaf = getLeaf(example);
-        int predictedClass = leaf.getMajorityClass();
+        int predictedClass = leaf.getMajorityClass(example);
         logger.info(example + " predicted with " + predictedClass);
         return new Tuple2<>(predictedClass, performances);
     }
