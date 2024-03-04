@@ -31,15 +31,13 @@ import vfdt.classifiers.dwm.classic.ClassicDynamicWeightedMajority;
 import vfdt.classifiers.dwm.classifiers.bayes.naive.GaussianNaiveBayesClassifier;
 import vfdt.classifiers.dwm.extended.ExtendedDynamicWeightedMajority;
 import vfdt.classifiers.dwm.windowed.WindowedDynamicWeightedMajority;
-import vfdt.classifiers.hoeffding.HoeffdingTree;
-import vfdt.classifiers.hoeffding.Node;
-import vfdt.classifiers.hoeffding.SimpleNodeStatistics;
-import vfdt.classifiers.hoeffding.SimpleNodeStatisticsBuilder;
+import vfdt.classifiers.hoeffding.*;
 import vfdt.inputs.Example;
 import vfdt.processors.coding.Encoder;
 import vfdt.processors.dwm.ClassicDwmProcessFunction;
 import vfdt.processors.dwm.ExtendedDwmProcessFunction;
 import vfdt.processors.dwm.WindowedDwmProcessFunction;
+import vfdt.processors.hoeffding.VfdtGaussianNaiveBayesProcessFunction;
 import vfdt.processors.hoeffding.VfdtProcessFunction;
 import vfdt.sinks.LoggingSink;
 
@@ -133,6 +131,7 @@ public class DataStreamJob {
                 .build();
 
         int classNumber = decoder.size();
+        int attributesNumber = attributes.size();
 
         DataStream<String> vfdtStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
@@ -143,8 +142,8 @@ public class DataStreamJob {
                         double tau = 0.2;
                         long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
 
-                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributes.size());
-                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributes.size(), tau, nMin, statisticsBuilder) {
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributesNumber);
+                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
                             @Override
                             protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                                 double threshold = 0.5;
@@ -158,46 +157,70 @@ public class DataStreamJob {
         vfdtStream.addSink(new LoggingSink()).name("logging-sink-vfdt");
         vfdtStream.sinkTo(kafkaSink).name("kafka-sink-vfdt");
 
-        DataStream<String> classicDwmStream = env.fromCollection(data.f0)
+        DataStream<String> vfdtGaussStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new ClassicDwmProcessFunction("classicDwm", dataset, bootstrapSamplesLimit) {
+                .process(new VfdtGaussianNaiveBayesProcessFunction("vfdt-gauss-nb", dataset, bootstrapSamplesLimit) {
                     @Override
-                    protected ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
-                        double beta = 0.5;
-                        double threshold = 0.2;
-                        int updateClassifiersEachSamples = 1;
-                        return new ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
+                    protected HoeffdingTree<GaussianNaiveBayesStatistics, GaussianNaiveBayesStatisticsBuilder> createClassifier() {
+                        double delta = 0.05;
+                        double tau = 0.2; //little difference so it presents different params
+                        long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
+
+                        GaussianNaiveBayesStatisticsBuilder statisticsBuilder = new GaussianNaiveBayesStatisticsBuilder(classNumber, attributesNumber);
+                        return new HoeffdingTree<GaussianNaiveBayesStatistics, GaussianNaiveBayesStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
                             @Override
-                            protected GaussianNaiveBayesClassifier createClassifier() {
-                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
+                            protected double heuristic(int attributeIndex, Node<GaussianNaiveBayesStatistics, GaussianNaiveBayesStatisticsBuilder> node) {
+                                double threshold = 0.5;
+                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attributeIndex)) / threshold;
                             }
                         };
                     }
-                }).name("process-examples-classic-dwm");
+                })
+                .name("process-examples-vfdt-gauss-nb");
 
-        classicDwmStream.addSink(new LoggingSink()).name("logging-sink-classic-dwm");
-        classicDwmStream.sinkTo(kafkaSink).name("kafka-sink-classic-dwm");
+        vfdtGaussStream.addSink(new LoggingSink()).name("logging-sink-vfdt-gauss-nb");
+        vfdtGaussStream.sinkTo(kafkaSink).name("kafka-sink-vfdt-gauss-nb");
 
-        DataStream<String> extendedDwmStream = env.fromCollection(data.f0)
-                .keyBy(Example::getId)
-                .process(new ExtendedDwmProcessFunction("extendedDwm", dataset, bootstrapSamplesLimit) {
-                    @Override
-                    protected ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
-                        double beta = 0.5;
-                        double threshold = 0.2;
-                        int updateClassifiersEachSamples = 1;
-
-                        return new ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
-                            @Override
-                            protected GaussianNaiveBayesClassifier createClassifier() {
-                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
-                            }
-                        };
-                    }
-                }).name("process-examples-extended-dwm");
-
-        extendedDwmStream.addSink(new LoggingSink()).name("logging-sink-extended-dwm");
-        extendedDwmStream.sinkTo(kafkaSink).name("kafka-sink-extended-dwm");
+//        DataStream<String> classicDwmStream = env.fromCollection(data.f0)
+//                .keyBy(Example::getId)
+//                .process(new ClassicDwmProcessFunction("classicDwm", dataset, bootstrapSamplesLimit) {
+//                    @Override
+//                    protected ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
+//                        double beta = 0.5;
+//                        double threshold = 0.2;
+//                        int updateClassifiersEachSamples = 1;
+//                        return new ClassicDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
+//                            @Override
+//                            protected GaussianNaiveBayesClassifier createClassifier() {
+//                                return new GaussianNaiveBayesClassifier(classNumber, attributesNumber);
+//                            }
+//                        };
+//                    }
+//                }).name("process-examples-classic-dwm");
+//
+//        classicDwmStream.addSink(new LoggingSink()).name("logging-sink-classic-dwm");
+//        classicDwmStream.sinkTo(kafkaSink).name("kafka-sink-classic-dwm");
+//
+//        DataStream<String> extendedDwmStream = env.fromCollection(data.f0)
+//                .keyBy(Example::getId)
+//                .process(new ExtendedDwmProcessFunction("extendedDwm", dataset, bootstrapSamplesLimit) {
+//                    @Override
+//                    protected ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier> createClassifier() {
+//                        double beta = 0.5;
+//                        double threshold = 0.2;
+//                        int updateClassifiersEachSamples = 1;
+//
+//                        return new ExtendedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples) {
+//                            @Override
+//                            protected GaussianNaiveBayesClassifier createClassifier() {
+//                                return new GaussianNaiveBayesClassifier(classNumber, attributesNumber);
+//                            }
+//                        };
+//                    }
+//                }).name("process-examples-extended-dwm");
+//
+//        extendedDwmStream.addSink(new LoggingSink()).name("logging-sink-extended-dwm");
+//        extendedDwmStream.sinkTo(kafkaSink).name("kafka-sink-extended-dwm");
 
 //        DataStream<String> windowedDwmStream = env.fromCollection(data.f0)
 //                .keyBy(Example::getId)
@@ -212,7 +235,7 @@ public class DataStreamJob {
 //                        return new WindowedDynamicWeightedMajority<GaussianNaiveBayesClassifier>(beta, threshold, classNumber, updateClassifiersEachSamples, windowSize) {
 //                            @Override
 //                            protected GaussianNaiveBayesClassifier createClassifier() {
-//                                return new GaussianNaiveBayesClassifier(classNumber, attributes.size());
+//                                return new GaussianNaiveBayesClassifier(classNumber, attributesNumber);
 //                            }
 //                        };
 //                    }

@@ -7,9 +7,9 @@ import java.util.Arrays;
 import static vfdt.classifiers.helpers.Helpers.getIndexOfHighestValue;
 
 public abstract class NodeStatistics {
-    private long n;
+    protected long n;
 
-    private final Long[] classCounts;
+    protected final Long[] classCounts;
 
     public NodeStatistics(int classNumber) {
         n = 0;
@@ -25,6 +25,10 @@ public abstract class NodeStatistics {
     }
 
     protected abstract void updateAttributeStatistics(Example example, Integer disabledAttributeIndex);
+
+    public int getMajorityClass(Example example) {
+        return getIndexOfHighestValue(classCounts);
+    }
 
     public int getMajorityClass() {
         return getIndexOfHighestValue(classCounts);
