@@ -157,13 +157,55 @@ public class DataStreamJob {
         vfdtStream.addSink(new LoggingSink()).name("logging-sink-vfdt");
         vfdtStream.sinkTo(kafkaSink).name("kafka-sink-vfdt");
 
+        DataStream<String> vfdtEntropyHeuristicStream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new VfdtProcessFunction("vfdtEntropy", dataset, bootstrapSamplesLimit) {
+                    @Override
+                    protected HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
+                        double delta = 0.05;
+                        double tau = 0.2;
+                        long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
+
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributesNumber);
+                        return new HoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
+                            @Override
+                            protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                                double examplesInfo = 0.0;
+
+                                Map<Double, Long> valueCounts = new HashMap<>();
+                                List<Map<Double, Long>> existingCounts = node.getStatistics().getAttributeValueCounts().get(attributeNumber);
+                                existingCounts.forEach(valuesMap -> valuesMap.forEach((attributeValue, count) -> valueCounts.compute(attributeValue, (key, existingCount) -> (existingCount == null) ? count : existingCount + count)));
+
+                                double attributeInfo = 0.0;
+                                double base = Math.log(2);
+                                for (Map.Entry<Double, Long> flattenedEntry : valueCounts.entrySet()) {
+                                    double sumForEachClass = 0.0;
+
+                                    for (int classIndex = 0; classIndex < existingCounts.size(); classIndex++) {
+                                        double prob = ((double) existingCounts.get(classIndex).getOrDefault(flattenedEntry.getKey(), 0L)) / ((double) node.getClassCount(classIndex));
+                                        sumForEachClass += prob * Math.log(prob) / base;
+                                    }
+
+                                    attributeInfo -= ((double) flattenedEntry.getValue()) / ((double) node.getN()) * sumForEachClass;
+                                }
+
+                                return examplesInfo - attributeInfo;
+                            }
+                        };
+                    }
+                })
+                .name("process-examples-vfdt-entropy");
+
+        vfdtEntropyHeuristicStream.addSink(new LoggingSink()).name("logging-sink-vfdt-entropy");
+        vfdtEntropyHeuristicStream.sinkTo(kafkaSink).name("kafka-sink-vfdt-entropy");
+
         DataStream<String> vfdtGaussStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)
-                .process(new VfdtGaussianNaiveBayesProcessFunction("vfdt-gauss-nb", dataset, bootstrapSamplesLimit) {
+                .process(new VfdtGaussianNaiveBayesProcessFunction("vfdtGaussNb", dataset, bootstrapSamplesLimit) {
                     @Override
                     protected HoeffdingTree<GaussianNaiveBayesStatistics, GaussianNaiveBayesStatisticsBuilder> createClassifier() {
                         double delta = 0.05;
-                        double tau = 0.2; //little difference so it presents different params
+                        double tau = 0.2;
                         long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
 
                         GaussianNaiveBayesStatisticsBuilder statisticsBuilder = new GaussianNaiveBayesStatisticsBuilder(classNumber, attributesNumber);

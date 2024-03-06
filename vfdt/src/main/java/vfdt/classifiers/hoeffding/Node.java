@@ -42,6 +42,10 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
         return statistics;
     }
 
+    public long getClassCount(int classIndex) {
+        return statistics.getClassCount(classIndex);
+    }
+
     public boolean isLeaf() {
         return leftChild == null || rightChild == null;
     }
