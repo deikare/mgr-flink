@@ -20,7 +20,7 @@ public abstract class NodeStatistics {
 
     public void update(Example example, Integer disabledAttributeIndex) {
         n++;
-        classCounts[example.getMappedClass()] += 1L;
+        classCounts[example.getMappedClass()]++;
         updateAttributeStatistics(example, disabledAttributeIndex);
     }
 
