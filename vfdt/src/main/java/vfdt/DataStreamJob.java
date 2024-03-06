@@ -181,7 +181,7 @@ public class DataStreamJob {
                                 for (Map.Entry<Double, Long> flattenedEntry : valueCounts.entrySet()) {
                                     double sumForEachClass = 0.0;
 
-                                    for (int classIndex = 0; classIndex < existingCounts.size(); classIndex++) {
+                                    for (int classIndex = 0; classIndex < classNumber; classIndex++) {
                                         double prob = ((double) existingCounts.get(classIndex).getOrDefault(flattenedEntry.getKey(), 0L)) / ((double) node.getClassCount(classIndex));
                                         sumForEachClass += prob * Math.log(prob) / base;
                                     }
