@@ -1,5 +1,6 @@
-package vfdt.classifiers.bstHoeffding;
+package vfdt.classifiers.bstHoeffding.functional;
 
+import vfdt.classifiers.bstHoeffding.functional.NaiveBayesNodeStatistics;
 import vfdt.classifiers.hoeffding.StatisticsBuilderInterface;
 
 public class NaiveBayesNodeStatisticsBuilder implements StatisticsBuilderInterface<NaiveBayesNodeStatistics> {
