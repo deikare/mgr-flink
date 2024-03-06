@@ -73,4 +73,8 @@ public class BstHoeffdingTreeStatistics {
         if (item != null)
             stack.push(item);
     }
+
+    public List<AttributeValuesCountBst> getAttributeCountsTrees() {
+        return attributeCountsTrees;
+    }
 }
