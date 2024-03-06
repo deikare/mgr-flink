@@ -19,4 +19,8 @@ public class AttributeCountsNode {
         this.leftChild = null;
         this.rightChild = null;
     }
+
+    public long[] getVe() {
+        return ve;
+    }
 }

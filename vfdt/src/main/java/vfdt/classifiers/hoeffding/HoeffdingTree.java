@@ -105,7 +105,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         return result;
     }
 
-    private Node<N_S, B> getLeaf(Example example) {
+    protected Node<N_S, B> getLeaf(Example example) {
         Node<N_S, B> result = root;
         while (!(result.isLeaf()))
             result = result.getChild(example);

@@ -28,6 +28,8 @@ import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.classifiers.base.BaseClassifierTags;
 import vfdt.classifiers.bstHoeffding.BstHoeffdingTree;
+import vfdt.classifiers.bstHoeffding.NaiveBayesNodeStatistics;
+import vfdt.classifiers.bstHoeffding.NaiveBayesNodeStatisticsBuilder;
 import vfdt.classifiers.hoeffding.*;
 import vfdt.inputs.Example;
 import vfdt.processors.coding.Encoder;
@@ -156,15 +158,15 @@ public class DataStreamJob {
                 .keyBy(Example::getId)
                 .process(new VfdtBstProcessFunction("vfdtBst", dataset, bootstrapSamplesLimit) {
                     @Override
-                    protected BstHoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
+                    protected BstHoeffdingTree<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder> createClassifier() {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
 
-                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributesNumber);
-                        return new BstHoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
+                        NaiveBayesNodeStatisticsBuilder statisticsBuilder = new NaiveBayesNodeStatisticsBuilder(classNumber, attributesNumber, 10);
+                        return new BstHoeffdingTree<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
                             @Override
-                            protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                            protected double heuristic(int attributeNumber, Node<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder> node) {
                                 double threshold = 0.5;
                                 return Math.abs(threshold - node.getStatistics().getSplittingValue(attributeNumber)) / threshold;
                             }
