@@ -34,6 +34,18 @@ public class AttributeValuesCountBst {
         }
     }
 
+    public AttributeCountsNode getNodeOfValueSmallerOrEqualThan(double toCompare) {
+        AttributeCountsNode result = root;
+        
+        while (result != null) {
+            if (result.value < toCompare)
+                break;
+            else result = result.leftChild;
+        }
+
+        return result;
+    }
+
     public AttributeCountsNode getRoot() {
         return root;
     }
