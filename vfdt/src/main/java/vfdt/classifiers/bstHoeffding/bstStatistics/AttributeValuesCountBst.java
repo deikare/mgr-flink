@@ -1,4 +1,4 @@
-package vfdt.classifiers.bstHoeffding.statistics;
+package vfdt.classifiers.bstHoeffding.bstStatistics;
 
 public class AttributeValuesCountBst {
     private AttributeCountsNode root;

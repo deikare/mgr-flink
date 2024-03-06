@@ -1,4 +1,4 @@
-package vfdt.classifiers.bstHoeffding.statistics;
+package vfdt.classifiers.bstHoeffding.bstStatistics;
 
 import vfdt.inputs.Example;
 

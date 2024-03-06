@@ -1,6 +1,6 @@
 package vfdt.classifiers.bstHoeffding;
 
-import vfdt.classifiers.bstHoeffding.statistics.BstHoeffdingTreeStatistics;
+import vfdt.classifiers.bstHoeffding.bstStatistics.BstHoeffdingTreeStatistics;
 import vfdt.classifiers.hoeffding.HoeffdingTree;
 import vfdt.classifiers.hoeffding.Node;
 import vfdt.classifiers.hoeffding.NodeStatistics;
