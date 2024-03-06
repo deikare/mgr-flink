@@ -9,18 +9,16 @@ import vfdt.inputs.Example;
 
 public abstract class BstHoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends HoeffdingTree<N_S, B> {
     private final BstHoeffdingTreeStatistics totalStatistics;
-    private final int classNumber;
 
     public BstHoeffdingTree(int classesNumber, double delta, int attributesNumber, double tau, long nMin, B statisticsBuilder) {
         super(classesNumber, delta, attributesNumber, tau, nMin, statisticsBuilder);
-        totalStatistics = new BstHoeffdingTreeStatistics(attributesNumber);
-        classNumber = classesNumber;
+        totalStatistics = new BstHoeffdingTreeStatistics(classesNumber, attributesNumber);
     }
 
     @Override
     protected void updateLeaf(Example example, Node<N_S, B> leaf) {
         leaf.updateStatistics(example);
-        totalStatistics.updateStatistics(example, classNumber);
+        totalStatistics.updateStatistics(example);
 
         if (leaf.getN() > nMin) {
             leaf.resetN();
@@ -43,7 +41,7 @@ public abstract class BstHoeffdingTree<N_S extends NodeStatistics, B extends Sta
     }
 
     private void findSplittingValueAndSplit(Example example, Node<N_S, B> leaf, int splittingAttributeIndex) {
-        double splittingValue = totalStatistics.getSplittingValue(splittingAttributeIndex, classNumber, n);
+        double splittingValue = totalStatistics.getSplittingValue(splittingAttributeIndex, n);
         leaf.split(splittingAttributeIndex, splittingValue, statisticsBuilder, example);
     }
 }

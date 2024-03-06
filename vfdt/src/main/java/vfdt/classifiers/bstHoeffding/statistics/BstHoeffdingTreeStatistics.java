@@ -8,15 +8,17 @@ import java.util.Stack;
 
 public class BstHoeffdingTreeStatistics {
     private final List<AttributeValuesCountBst> attributeCountsTrees;
+    private final int classNumber;
 
-    public BstHoeffdingTreeStatistics(int attributeNumber) {
+    public BstHoeffdingTreeStatistics(int classNumber, int attributeNumber) {
         attributeCountsTrees = new ArrayList<>(attributeNumber);
         for (int attributeIndex = 0; attributeIndex < attributeNumber; attributeIndex++) {
             attributeCountsTrees.add(new AttributeValuesCountBst());
         }
+        this.classNumber = classNumber;
     }
 
-    public void updateStatistics(Example example, int classNumber) {
+    public void updateStatistics(Example example) {
         int exampleClass = example.getMappedClass();
         double[] attributes = example.getAttributes();
         for (int attributeIndex = 0; attributeIndex < attributes.length; attributeIndex++) {
@@ -24,7 +26,7 @@ public class BstHoeffdingTreeStatistics {
         }
     }
 
-    public double getSplittingValue(int attributeIndex, int classNumber, long n) {
+    public double getSplittingValue(int attributeIndex, long n) {
         double bestAttributeValue = Double.MIN_VALUE;
 
         double maxInfo = -Double.MAX_VALUE;
@@ -35,7 +37,7 @@ public class BstHoeffdingTreeStatistics {
         while (!stack.isEmpty()) {
             AttributeCountsNode node = stack.pop();
 
-            double currentInfo = calculateInformation(node.ve, classNumber, n) + calculateInformation(node.vh, classNumber, n);
+            double currentInfo = calculateInformation(node.ve, n) + calculateInformation(node.vh, n);
 
             if (currentInfo > maxInfo) {
                 bestAttributeValue = node.value;
@@ -49,7 +51,7 @@ public class BstHoeffdingTreeStatistics {
         return bestAttributeValue;
     }
 
-    private double calculateInformation(long[] attributeCounts, int classNumber, long n) {
+    private double calculateInformation(long[] attributeCounts, long n) {
         long totalCount = 0;
         for (long count : attributeCounts) {
             totalCount += count;
