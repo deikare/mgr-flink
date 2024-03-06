@@ -36,11 +36,11 @@ public class AttributeValuesCountBst {
 
     public AttributeCountsNode getNodeOfValueSmallerOrEqualThan(double toCompare) {
         AttributeCountsNode result = root;
-        
+
         while (result != null) {
-            if (result.value < toCompare)
-                break;
-            else result = result.leftChild;
+            if (result.value > toCompare)
+                result = result.leftChild;
+            else break;
         }
 
         return result;

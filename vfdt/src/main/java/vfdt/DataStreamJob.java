@@ -27,12 +27,14 @@ import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.classifiers.base.BaseClassifierTags;
-import vfdt.classifiers.bstHoeffding.BstHoeffdingTree;
-import vfdt.classifiers.bstHoeffding.NaiveBayesNodeStatistics;
-import vfdt.classifiers.bstHoeffding.NaiveBayesNodeStatisticsBuilder;
+import vfdt.classifiers.bstHoeffding.functional.FunctionalBstHoeffdingTree;
+import vfdt.classifiers.bstHoeffding.standard.BstHoeffdingTree;
+import vfdt.classifiers.bstHoeffding.functional.NaiveBayesNodeStatistics;
+import vfdt.classifiers.bstHoeffding.functional.NaiveBayesNodeStatisticsBuilder;
 import vfdt.classifiers.hoeffding.*;
 import vfdt.inputs.Example;
 import vfdt.processors.coding.Encoder;
+import vfdt.processors.hoeffding.FunctionalVfdtBstProcessFunction;
 import vfdt.processors.hoeffding.VfdtBstProcessFunction;
 import vfdt.processors.hoeffding.VfdtGaussianNaiveBayesProcessFunction;
 import vfdt.processors.hoeffding.VfdtProcessFunction;
@@ -158,15 +160,15 @@ public class DataStreamJob {
                 .keyBy(Example::getId)
                 .process(new VfdtBstProcessFunction("vfdtBst", dataset, bootstrapSamplesLimit) {
                     @Override
-                    protected BstHoeffdingTree<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder> createClassifier() {
+                    protected BstHoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
                         double delta = 0.05;
                         double tau = 0.2;
                         long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
 
-                        NaiveBayesNodeStatisticsBuilder statisticsBuilder = new NaiveBayesNodeStatisticsBuilder(classNumber, attributesNumber, 10);
-                        return new BstHoeffdingTree<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributesNumber);
+                        return new BstHoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
                             @Override
-                            protected double heuristic(int attributeNumber, Node<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder> node) {
+                            protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                                 double threshold = 0.5;
                                 return Math.abs(threshold - node.getStatistics().getSplittingValue(attributeNumber)) / threshold;
                             }
@@ -177,6 +179,30 @@ public class DataStreamJob {
 
         vfdtBstStream.addSink(new LoggingSink()).name("logging-sink-vfdt-bst");
         vfdtBstStream.sinkTo(kafkaSink).name("kafka-sink-vfdt-bst");
+
+        DataStream<String> vfdtBstBayesStream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new FunctionalVfdtBstProcessFunction("vfdtFuncBst", dataset, bootstrapSamplesLimit) {
+                    @Override
+                    protected FunctionalBstHoeffdingTree<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder> createClassifier() {
+                        double delta = 0.05;
+                        double tau = 0.2;
+                        long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
+
+                        NaiveBayesNodeStatisticsBuilder statisticsBuilder = new NaiveBayesNodeStatisticsBuilder(classNumber, attributesNumber, 10);
+                        return new FunctionalBstHoeffdingTree<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
+                            @Override
+                            protected double heuristic(int attributeNumber, Node<NaiveBayesNodeStatistics, NaiveBayesNodeStatisticsBuilder> node) {
+                                double threshold = 0.5;
+                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attributeNumber)) / threshold;
+                            }
+                        };
+                    }
+                })
+                .name("process-examples-vfdt-bst");
+
+        vfdtBstBayesStream.addSink(new LoggingSink()).name("logging-sink-vfdt-func-bst");
+        vfdtBstBayesStream.sinkTo(kafkaSink).name("kafka-sink-vfdt-func-bst");
 
         DataStream<String> vfdtEntropyHeuristicStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)

@@ -1,4 +1,4 @@
-package vfdt.classifiers.bstHoeffding;
+package vfdt.classifiers.bstHoeffding.functional;
 
 import vfdt.classifiers.bstHoeffding.bstStatistics.AttributeValuesCountBst;
 import vfdt.classifiers.hoeffding.NodeStatistics;
