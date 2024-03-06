@@ -2,7 +2,6 @@ package vfdt.classifiers.bstHoeffding.statistics;
 
 public class AttributeValuesCountBst {
     private AttributeCountsNode root;
-    //todo think if its useful
 
     public AttributeValuesCountBst() {
         root = null;
