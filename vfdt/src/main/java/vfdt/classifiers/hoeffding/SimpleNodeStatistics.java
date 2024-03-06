@@ -9,38 +9,44 @@ public class SimpleNodeStatistics extends NodeStatistics {
 
     public SimpleNodeStatistics(int classNumber, int attributesNumber) {
         super(classNumber);
-        
-        attributeValueCounts = new ArrayList<>(classNumber);
-        for (int classIndex = 0; classIndex < classNumber; classIndex++) {
-            List<Map<Double, Long>> classAttributesValueCounts = new ArrayList<>(attributesNumber);
-            for (int attributeIndex = 0; attributeIndex < attributesNumber; attributeIndex++) {
-                classAttributesValueCounts.add(new HashMap<>());
+
+        attributeValueCounts = new ArrayList<>(attributesNumber);
+
+        for (int attributeIndex = 0; attributeIndex < attributesNumber; attributeIndex++) {
+            List<Map<Double, Long>> attributeValuesForEachClass = new ArrayList<>(classNumber);
+            for (int classIndex = 0; classIndex < classNumber; classIndex++) {
+                attributeValuesForEachClass.add(new HashMap<>());
             }
-            attributeValueCounts.add(classAttributesValueCounts);
+            attributeValueCounts.add(attributeValuesForEachClass);
         }
     }
 
     @Override
     protected void updateAttributeStatistics(Example example, Integer disabledAttributeIndex) {
-        List<Map<Double, Long>> attributeCounts = attributeValueCounts.get(example.getMappedClass());
         if (disabledAttributeIndex == null)
-            incrementAttributeCounts(example, attributeCounts, 0, attributeCounts.size(), 1L);
+            incrementAttributeCounts(example, 0, attributeValueCounts.size(), 1L);
         else {
-            incrementAttributeCounts(example, attributeCounts, 0, disabledAttributeIndex, 1L);
-            incrementAttributeCounts(example, attributeCounts, disabledAttributeIndex + 1, attributeCounts.size(), 1L);
+            incrementAttributeCounts(example, 0, disabledAttributeIndex, 1L);
+            incrementAttributeCounts(example, disabledAttributeIndex + 1, attributeValueCounts.size(), 1L);
         }
     }
 
-    private void incrementAttributeCounts(Example example, List<Map<Double, Long>> attributeCounts, int start, int end, long increment) {
+    private void incrementAttributeCounts(Example example, int start, int end, long increment) {
         double[] exampleAttributes = example.getAttributes();
-        for (int i = start; i < end; i++) {
-            attributeCounts.get(i).compute(exampleAttributes[i], (key, value) -> (value == null) ? 1L : value + increment);
+        int exampleClass = example.getMappedClass();
+        for (int attributeIndex = start; attributeIndex < end; attributeIndex++) {
+            attributeValueCounts.get(attributeIndex).get(exampleClass).compute(exampleAttributes[attributeIndex], (key, value) -> (value == null) ? 1L : value + increment);
         }
     }
 
     @Override
     public double getSplittingValue(int attributeNumber) throws RuntimeException {
-        return Collections.max(attributeValueCounts.get(getMajorityClass()).get(attributeNumber).entrySet(), Map.Entry.comparingByValue()).getKey(); //todo check if majority class is already calculated
+        int majorityClass = getMajorityClass();
+        return Collections.max(attributeValueCounts.get(attributeNumber).get(majorityClass).entrySet(), Map.Entry.comparingByValue()).getKey(); //todo check if majority class is already calculated
+    }
+
+    public List<List<Map<Double, Long>>> getAttributeValueCounts() {
+        return attributeValueCounts;
     }
 
     @Override

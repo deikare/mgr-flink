@@ -34,6 +34,10 @@ public abstract class NodeStatistics {
         return getIndexOfHighestValue(classCounts);
     }
 
+    public long getClassCount(int classIndex) {
+        return classCounts[classIndex];
+    }
+
     public abstract double getSplittingValue(int attributeNumber);
 
     public long getN() {
