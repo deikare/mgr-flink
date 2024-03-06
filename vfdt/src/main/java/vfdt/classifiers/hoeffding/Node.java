@@ -51,16 +51,16 @@ public class Node<N_S extends NodeStatistics, B extends StatisticsBuilderInterfa
     }
 
     public void split(int splittingAttributeNumber, B statisticsBuilder, Example example) {
-        split(splittingAttributeNumber, statisticsBuilder);
-        Node<N_S, B> child = getChild(example);
-        child.updateStatistics(example);
+        split(splittingAttributeNumber, statistics.getSplittingValue(splittingAttributeNumber), statisticsBuilder, example);
     }
 
-    private void split(int splittingAttributeNumber, B statisticsBuilder) {
+    public void split(int splittingAttributeNumber, double splittingValue, B statisticsBuilder, Example example) {
         this.splittingAttributeNumber = splittingAttributeNumber;
-        this.splittingValue = statistics.getSplittingValue(splittingAttributeNumber);
+        this.splittingValue = splittingValue;
         this.leftChild = new Node<>(statisticsBuilder, splittingAttributeNumber);
         this.rightChild = new Node<>(statisticsBuilder, splittingAttributeNumber);
+        Node<N_S, B> child = getChild(example);
+        child.updateStatistics(example);
     }
 
     public void updateStatistics(Example example) {

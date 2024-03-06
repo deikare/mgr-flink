@@ -27,16 +27,11 @@ import org.apache.flink.connector.kafka.sink.KafkaSink;
 import org.apache.flink.streaming.api.datastream.DataStream;
 import org.apache.flink.streaming.api.environment.StreamExecutionEnvironment;
 import vfdt.classifiers.base.BaseClassifierTags;
-import vfdt.classifiers.dwm.classic.ClassicDynamicWeightedMajority;
-import vfdt.classifiers.dwm.classifiers.bayes.naive.GaussianNaiveBayesClassifier;
-import vfdt.classifiers.dwm.extended.ExtendedDynamicWeightedMajority;
-import vfdt.classifiers.dwm.windowed.WindowedDynamicWeightedMajority;
+import vfdt.classifiers.bstHoeffding.BstHoeffdingTree;
 import vfdt.classifiers.hoeffding.*;
 import vfdt.inputs.Example;
 import vfdt.processors.coding.Encoder;
-import vfdt.processors.dwm.ClassicDwmProcessFunction;
-import vfdt.processors.dwm.ExtendedDwmProcessFunction;
-import vfdt.processors.dwm.WindowedDwmProcessFunction;
+import vfdt.processors.hoeffding.VfdtBstProcessFunction;
 import vfdt.processors.hoeffding.VfdtGaussianNaiveBayesProcessFunction;
 import vfdt.processors.hoeffding.VfdtProcessFunction;
 import vfdt.sinks.LoggingSink;
@@ -156,6 +151,30 @@ public class DataStreamJob {
 
         vfdtStream.addSink(new LoggingSink()).name("logging-sink-vfdt");
         vfdtStream.sinkTo(kafkaSink).name("kafka-sink-vfdt");
+
+        DataStream<String> vfdtBstStream = env.fromCollection(data.f0)
+                .keyBy(Example::getId)
+                .process(new VfdtBstProcessFunction("vfdtBst", dataset, bootstrapSamplesLimit) {
+                    @Override
+                    protected BstHoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> createClassifier() {
+                        double delta = 0.05;
+                        double tau = 0.2;
+                        long nMin = 50; //highest difference - decreasing 10, 5 or even to value of 1 increases accuracy but also decreases time efficiency a lot
+
+                        SimpleNodeStatisticsBuilder statisticsBuilder = new SimpleNodeStatisticsBuilder(classNumber, attributesNumber);
+                        return new BstHoeffdingTree<SimpleNodeStatistics, SimpleNodeStatisticsBuilder>(classNumber, delta, attributesNumber, tau, nMin, statisticsBuilder) {
+                            @Override
+                            protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
+                                double threshold = 0.5;
+                                return Math.abs(threshold - node.getStatistics().getSplittingValue(attributeNumber)) / threshold;
+                            }
+                        };
+                    }
+                })
+                .name("process-examples-vfdt-bst");
+
+        vfdtBstStream.addSink(new LoggingSink()).name("logging-sink-vfdt-bst");
+        vfdtBstStream.sinkTo(kafkaSink).name("kafka-sink-vfdt-bst");
 
         DataStream<String> vfdtEntropyHeuristicStream = env.fromCollection(data.f0)
                 .keyBy(Example::getId)

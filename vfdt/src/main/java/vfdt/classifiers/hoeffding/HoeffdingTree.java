@@ -11,16 +11,16 @@ import java.time.Instant;
 import java.util.*;
 
 public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends StatisticsBuilderInterface<N_S>> extends BaseClassifierTrainAndClassify {
-    private final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
-    private final long nMin;
+    protected final Logger logger = LoggerFactory.getLogger(HoeffdingTree.class);
+    protected final long nMin;
 
     private final int R;
     private final double delta;
     private final int attributesNumber;
-    private final double tau;
+    protected final double tau;
     private final Node<N_S, B> root;
-    private final B statisticsBuilder;
-    private long n = 0L;
+    protected final B statisticsBuilder;
+    protected long n = 0L;
 
 
     public HoeffdingTree(int classesNumber, double delta, int attributesNumber, double tau, long nMin, B statisticsBuilder) {
@@ -56,7 +56,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         updateLeaf(example, leaf);
     }
 
-    private void updateLeaf(Example example, Node<N_S, B> leaf) {
+    protected void updateLeaf(Example example, Node<N_S, B> leaf) {
         leaf.updateStatistics(example);
 
         if (leaf.getN() > nMin) {
@@ -92,7 +92,7 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         return trainingPerformances;
     }
 
-    private Node<N_S, B> getLeaf(Example example, ArrayList<Tuple2<String, Long>> performances) {
+    protected Node<N_S, B> getLeaf(Example example, ArrayList<Tuple2<String, Long>> performances) {
         Instant start = Instant.now();
         long count = 1;
         Node<N_S, B> result = root;
@@ -113,15 +113,15 @@ public abstract class HoeffdingTree<N_S extends NodeStatistics, B extends Statis
         return result;
     }
 
-    private double getEpsilon() {
+    protected double getEpsilon() {
         return ((double) R) * Math.sqrt(Math.log(1 / delta) / (2 * n));
     }
 
-    private class HighestHeuristicPOJO {
-        Integer xA;
+    protected class HighestHeuristicPOJO {
+        public Integer xA;
         private Integer xB;
-        Double hXa;
-        Double hXb;
+        public Double hXa;
+        public Double hXb;
 
 
         public HighestHeuristicPOJO(Node<N_S, B> node) {
