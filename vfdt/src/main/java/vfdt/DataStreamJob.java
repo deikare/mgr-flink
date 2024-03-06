@@ -172,17 +172,18 @@ public class DataStreamJob {
                             protected double heuristic(int attributeNumber, Node<SimpleNodeStatistics, SimpleNodeStatisticsBuilder> node) {
                                 double examplesInfo = 0.0;
 
+                                List<List<Map<Double, Long>>> attributeCounts = node.getStatistics().getAttributeValueCounts();
+
                                 Map<Double, Long> valueCounts = new HashMap<>();
-                                List<Map<Double, Long>> existingCounts = node.getStatistics().getAttributeValueCounts().get(attributeNumber);
-                                existingCounts.forEach(valuesMap -> valuesMap.forEach((attributeValue, count) -> valueCounts.compute(attributeValue, (key, existingCount) -> (existingCount == null) ? count : existingCount + count)));
+                                attributeCounts.forEach(attributeCountsInClass -> attributeCountsInClass.forEach(valuesMap -> valuesMap.forEach((attributeValue, count) -> valueCounts.compute(attributeValue, (key, existingCount) -> (existingCount == null) ? count : existingCount + count))));
 
                                 double attributeInfo = 0.0;
                                 double base = Math.log(2);
                                 for (Map.Entry<Double, Long> flattenedEntry : valueCounts.entrySet()) {
                                     double sumForEachClass = 0.0;
 
-                                    for (int classIndex = 0; classIndex < existingCounts.size(); classIndex++) {
-                                        double prob = ((double) existingCounts.get(classIndex).getOrDefault(flattenedEntry.getKey(), 0L)) / ((double) node.getClassCount(classIndex));
+                                    for (int classIndex = 0; classIndex < classNumber; classIndex++) {
+                                        double prob = ((double) attributeCounts.get(classIndex).get(attributeNumber).getOrDefault(flattenedEntry.getKey(), 0L)) / ((double) node.getClassCount(classIndex));
                                         sumForEachClass += prob * Math.log(prob) / base;
                                     }
 
